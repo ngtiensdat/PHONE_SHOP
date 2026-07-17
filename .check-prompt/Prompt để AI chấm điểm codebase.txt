@@ -1,0 +1,15 @@
+Analyze this project and give scores from 1-10 for:
+- Clean Code
+- Scalability
+- Readability
+- Security
+- Maintainability
+- Architecture
+- Performance
+- Production Readiness
+
+Then explain:
+- Biggest strengths
+- Biggest weaknesses
+- Most dangerous technical debt
+- Top 5 improvements

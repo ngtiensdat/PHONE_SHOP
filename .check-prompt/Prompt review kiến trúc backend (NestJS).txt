@@ -1,0 +1,18 @@
+Review this NestJS architecture like a Senior Backend Engineer.
+
+Check for:
+- Fat controllers
+- Fat services
+- Improper module boundaries
+- Missing repositories
+- Business logic leakage
+- Circular dependencies
+- Poor DTO usage
+- Validation problems
+- Auth/security weaknesses
+- Scalability issues
+- Improper folder structure
+- Bad dependency injection practices
+
+Evaluate whether the architecture is production-ready.
+Suggest enterprise-level improvements.

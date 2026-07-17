@@ -1,0 +1,470 @@
+// ================================================================
+// PHONE_SHOP — Prisma Schema
+// Database: PostgreSQL + pgvector (for AI embeddings)
+// Updated: 2026-07-14
+// Models: User, Product, Brand, Category, ProductVariant,
+//         Inventory, Cart, Order, Voucher, Review,
+//         AI (Conversation, Message, EmbeddingLog),
+//         Notification, BugReport, Payment
+// ================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================================================================
+// ENUMS
+// ================================================================
+
+enum UserRole {
+  CUSTOMER
+  STAFF
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+  PENDING_VERIFY
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPING
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  COD
+  VNPAY
+  MOMO
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+}
+
+// ================================================================
+// USER & AUTH
+// ================================================================
+
+model User {
+  id            Int        @id @default(autoincrement())
+  email         String     @unique
+  passwordHash  String
+  role          UserRole   @default(CUSTOMER)
+  status        UserStatus @default(PENDING_VERIFY)
+  otpCode       String?
+  otpExpiresAt  DateTime?
+  refreshToken  String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  profile       UserProfile?
+  cart          Cart?
+  orders        Order[]
+  reviews       Review[]
+  userVouchers  UserVoucher[]
+  notifications Notification[]
+  conversations Conversation[]
+  bugReports    BugReport[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  fullName    String?
+  phone       String?
+  avatarUrl   String?
+  address     String?
+  city        String?
+  dateOfBirth DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+// ================================================================
+// CATALOG — Brand, Category, Product, ProductVariant
+// ================================================================
+
+model Brand {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique // "Apple", "Samsung", "Xiaomi"
+  slug        String    @unique
+  logoUrl     String?
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products Product[]
+
+  @@map("brands")
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique // "Flagship", "Mid-range", "Budget", "Tablet"
+  slug        String    @unique
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String   // "iPhone 16 Pro Max 256GB"
+  slug        String   @unique
+  brandId     Int
+  categoryId  Int
+  description String?  @db.Text
+  specs       Json?    // { screen: "6.7 inch OLED", chip: "A18 Pro", battery: "4685mAh" }
+  basePrice   Decimal  @db.Decimal(12, 0) // Giá gốc (VND)
+  salePrice   Decimal? @db.Decimal(12, 0) // Giá khuyến mãi
+  discount    Int?     // % giảm giá
+  rating      Decimal  @default(0) @db.Decimal(2, 1)
+  reviewCount Int      @default(0)
+  isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  tags        String[] // ["5G", "AI Camera", "Flagship"]
+  // embedding   Unsupported("vector(1536)")?  // pgvector for AI search
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  brand     Brand    @relation(fields: [brandId], references: [id])
+  category  Category @relation(fields: [categoryId], references: [id])
+  variants  ProductVariant[]
+  images    ProductImage[]
+  reviews   Review[]
+  orderItems OrderItem[]
+  embeddingLogs EmbeddingLog[]
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id         Int         @id @default(autoincrement())
+  productId  Int
+  color      String      // "Titan Đen", "Trắng Ngọc Trai"
+  storage    String      // "128GB", "256GB", "512GB", "1TB"
+  ram        String?     // "8GB", "12GB"
+  sku        String      @unique // "IPHONE16PM-256-BLACK"
+  price      Decimal     @db.Decimal(12, 0) // Override giá nếu khác base
+  imageUrl   String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventory  Inventory?
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@unique([productId, color, storage])
+  @@map("product_variants")
+}
+
+model ProductImage {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  url       String
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+// ================================================================
+// INVENTORY
+// ================================================================
+
+model Inventory {
+  id          Int         @id @default(autoincrement())
+  variantId   Int         @unique
+  stock       Int         @default(0) // Số lượng tồn kho
+  reserved    Int         @default(0) // Đang được giữ cho đơn hàng chưa confirm
+  status      StockStatus @default(OUT_OF_STOCK)
+  updatedAt   DateTime    @updatedAt
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@map("inventories")
+}
+
+// ================================================================
+// CART
+// ================================================================
+
+model Cart {
+  id        Int        @id @default(autoincrement())
+  userId    Int        @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  cartId    Int
+  variantId Int
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@unique([cartId, variantId])
+  @@map("cart_items")
+}
+
+// ================================================================
+// ORDER
+// ================================================================
+
+model Order {
+  id              Int           @id @default(autoincrement())
+  userId          Int
+  status          OrderStatus   @default(PENDING)
+  subtotal        Decimal       @db.Decimal(12, 0)
+  shippingFee     Decimal       @default(0) @db.Decimal(12, 0)
+  discount        Decimal       @default(0) @db.Decimal(12, 0)
+  total           Decimal       @db.Decimal(12, 0)
+  voucherCode     String?
+  shippingAddress Json          // { name, phone, address, city }
+  note            String?
+  paymentMethod   PaymentMethod @default(COD)
+  paymentStatus   PaymentStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id])
+  items    OrderItem[]
+  payment  Payment?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  productId   Int
+  variantId   Int
+  productName String   // Snapshot
+  color       String   // Snapshot
+  storage     String   // Snapshot
+  imageUrl    String?  // Snapshot
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(12, 0) // Snapshot — giá tại thời điểm mua
+  total       Decimal  @db.Decimal(12, 0)
+  createdAt   DateTime @default(now())
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product        @relation(fields: [productId], references: [id])
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@map("order_items")
+}
+
+// ================================================================
+// VOUCHER
+// ================================================================
+
+model Voucher {
+  id           Int      @id @default(autoincrement())
+  code         String   @unique
+  description  String?
+  discountType String   // "PERCENT" | "FIXED"
+  discountValue Decimal @db.Decimal(12, 0)
+  minOrderValue Decimal @default(0) @db.Decimal(12, 0)
+  maxDiscount  Decimal? @db.Decimal(12, 0)
+  usageLimit   Int?
+  usedCount    Int      @default(0)
+  isActive     Boolean  @default(true)
+  startsAt     DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  userVouchers UserVoucher[]
+
+  @@map("vouchers")
+}
+
+model UserVoucher {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  voucherId Int
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voucher Voucher @relation(fields: [voucherId], references: [id])
+
+  @@unique([userId, voucherId])
+  @@map("user_vouchers")
+}
+
+// ================================================================
+// REVIEW
+// ================================================================
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  rating    Int      // 1-5
+  comment   String?  @db.Text
+  imageUrls String[]
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@map("reviews")
+}
+
+// ================================================================
+// PAYMENT
+// ================================================================
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+  orderId       Int           @unique
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  amount        Decimal       @db.Decimal(12, 0)
+  transactionId String?       // VNPay/Momo transaction ID
+  gatewayData   Json?         // Raw callback data from payment gateway
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+// ================================================================
+// AI & VECTOR SEARCH
+// ================================================================
+
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  title     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             Int      @id @default(autoincrement())
+  conversationId Int
+  role           String   // "user" | "assistant"
+  content        String   @db.Text
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model EmbeddingLog {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  model     String   // "text-embedding-ada-002"
+  syncedAt  DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("embedding_logs")
+}
+
+model AiFeedback {
+  id         Int      @id @default(autoincrement())
+  userId     Int?
+  query      String
+  response   String   @db.Text
+  rating     Int?     // 1-5
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  @@map("ai_feedbacks")
+}
+
+// ================================================================
+// SYSTEM
+// ================================================================
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  body      String
+  type      String   // "ORDER_UPDATE" | "VOUCHER" | "SYSTEM"
+  isRead    Boolean  @default(false)
+  data      Json?    // Extra context (orderId, etc.)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model BugReport {
+  id          Int      @id @default(autoincrement())
+  userId      Int?
+  title       String
+  description String   @db.Text
+  imageUrls   String[]
+  status      String   @default("OPEN") // "OPEN" | "IN_PROGRESS" | "RESOLVED"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("bug_reports")
+}

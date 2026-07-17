@@ -1,0 +1,17 @@
+Review this Next.js/React codebase for clean frontend architecture.
+
+Detect:
+- Business logic inside UI components
+- Large components
+- Prop drilling
+- Missing reusable components
+- Poor state management
+- Repeated fetch logic
+- Bad folder structure
+- Tight coupling
+- Missing loading/error states
+- Poor scalability
+- Bad naming
+- Unnecessary re-renders
+
+Suggest a cleaner scalable architecture.
