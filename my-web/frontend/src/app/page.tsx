@@ -7,7 +7,7 @@
  * - Interactive Brand & Tag Filtering (using ProductFilters component)
  * - Rich Product Grid
  *
- * Related: src/components/base/Header.tsx, src/components/features/product/ProductCard.tsx, src/data/mock-products.ts
+ * Related: src/components/base/Header.tsx, src/components/features/product/ProductCard.tsx, src/types/product.ts, src/constants/labels.ts
  */
 
 'use client';
@@ -28,10 +28,10 @@ import CompactProductCard from '@/components/features/product/CompactProductCard
 import ProductDetailModal from '@/components/features/product/ProductDetailModal';
 import CountdownTimer from '@/components/features/flashsale/CountdownTimer';
 import ProductFilters from '@/components/features/filter/ProductFilters';
+import CompareFloatingBar from '@/components/features/product/CompareFloatingBar';
 import { FEATURED_PRODUCTS } from '@/data/mock-products';
-import type { MockProduct } from '@/data/mock-products';
+import type { MockProduct } from '@/types/product';
 import { LABELS } from '@/constants/labels';
-import { APP_CONFIG } from '@/constants/config';
 
 // Mock banners
 const HERO_BANNERS = [
@@ -77,7 +77,7 @@ const PROMO_SIDE_BANNERS = [
 
 export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<MockProduct | null>(null);
-  const [activeCategory, setActiveCategory] = useState('Điện thoại');
+  const [activeCategory, setActiveCategory] = useState(LABELS.FILTERS.CATEGORY_MOBILE);
   const [activeBrand, setActiveBrand] = useState('All');
   const [activeTag, setActiveTag] = useState('All');
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -111,7 +111,7 @@ export default function Home() {
   const brands = ['All', ...Array.from(new Set(activeCategoryProducts.map(p => p.brand)))];
 
   // Flash Sale products (Phone category only)
-  const flashSaleProducts = FEATURED_PRODUCTS.filter(p => p.category === 'Điện thoại').slice(0, 3);
+  const flashSaleProducts = FEATURED_PRODUCTS.filter(p => p.category === LABELS.FILTERS.CATEGORY_MOBILE).slice(0, 3);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-secondary)' }}>
@@ -133,11 +133,11 @@ export default function Home() {
                   style={{ backgroundImage: `linear-gradient(to right, rgba(0,0,0,0.7) 30%, transparent), url(${banner.image})` }}
                 >
                   <div className="slide-content">
-                    <span className="slide-tag">Đặc Quyền Mua Sắm</span>
+                    <span className="slide-tag">{LABELS.HOMEPAGE.EXCLUSIVE_TAG}</span>
                     <h2>{banner.title}</h2>
                     <p>{banner.sub}</p>
                     <Link href={banner.link} className="btn btn-primary btn-sm">
-                      Xem chi tiết <ArrowRight size={14} />
+                      {LABELS.HOMEPAGE.SEE_DETAILS} <ArrowRight size={14} />
                     </Link>
                   </div>
                 </div>
@@ -175,7 +175,7 @@ export default function Home() {
                   <div className="side-banner-content">
                     <h3>{banner.title}</h3>
                     <p>{banner.sub}</p>
-                    <Link href={banner.link} className="side-banner-link">Mua ngay &rarr;</Link>
+                    <Link href={banner.link} className="side-banner-link">{LABELS.HOMEPAGE.BUY_NOW_PROMO} &rarr;</Link>
                   </div>
                 </div>
               ))}
@@ -190,10 +190,10 @@ export default function Home() {
             <div className="flashsale-header">
               <div className="flashsale-title">
                 <Flame size={24} className="flame-icon" fill="currentColor" />
-                <h2>DEAL SỐC MỖI NGÀY</h2>
+                <h2>{LABELS.HOMEPAGE.FLASH_SALE_TITLE}</h2>
               </div>
               <div className="flashsale-countdown">
-                <span className="countdown-label">KẾT THÚC TRONG</span>
+                <span className="countdown-label">{LABELS.HOMEPAGE.FLASH_SALE_END}</span>
                 <CountdownTimer initialHours={4} initialMinutes={15} initialSeconds={30} />
               </div>
             </div>
@@ -227,12 +227,12 @@ export default function Home() {
             <div className="sidebar-sticky-banner">
               <div className="inner-banner-bg" style={{ backgroundImage: `url('/iphone_17_banner.png')` }}>
                 <div className="banner-text-overlay">
-                  <h4>LÊN ĐỜI SIÊU PHẨM</h4>
+                  <h4>{LABELS.HOMEPAGE.UPGRADE_TITLE}</h4>
                   <h3>iPhone 17</h3>
-                  <p>Hỗ trợ trả góp 0%</p>
-                  <p className="price-tag">Chỉ từ 20,08tr/tháng</p>
+                  <p>{LABELS.HOMEPAGE.INSTALLMENT_PROMO}</p>
+                  <p className="price-tag">{LABELS.HOMEPAGE.PRICE_FROM}</p>
                   <Link href="/products/iphone-17-pro-max" className="btn btn-primary btn-sm btn-full">
-                    Sắm Ngay
+                    {LABELS.HOMEPAGE.SHOP_NOW}
                   </Link>
                 </div>
               </div>
@@ -256,8 +256,8 @@ export default function Home() {
             {/* Product Feed Grid */}
             <div className="products-feed-section">
               <div className="feed-header-row">
-                <h2>DANH SÁCH {activeCategory.toUpperCase()}</h2>
-                <span className="results-count">Tìm thấy <strong>{filteredProducts.length}</strong> sản phẩm</span>
+                <h2>{LABELS.HOMEPAGE.PRODUCT_LIST} {activeCategory.toUpperCase()}</h2>
+                <span className="results-count">{LABELS.HOMEPAGE.FOUND} <strong>{filteredProducts.length}</strong> {LABELS.HOMEPAGE.PRODUCTS_SUFFIX}</span>
               </div>
 
               {filteredProducts.length > 0 ? (
@@ -273,8 +273,8 @@ export default function Home() {
               ) : (
                 <div className="empty-results-box">
                   <ShieldAlert size={48} className="empty-icon" />
-                  <h3>Không tìm thấy sản phẩm phù hợp</h3>
-                  <p>Vui lòng thử chọn lại hãng sản xuất hoặc nhu cầu sử dụng khác.</p>
+                  <h3>{LABELS.HOMEPAGE.EMPTY_TITLE}</h3>
+                  <p>{LABELS.HOMEPAGE.EMPTY_DESC}</p>
                   <button 
                     type="button" 
                     className="btn btn-secondary btn-sm"
@@ -283,7 +283,7 @@ export default function Home() {
                       setActiveTag('All');
                     }}
                   >
-                    Thiết lập lại bộ lọc
+                    {LABELS.HOMEPAGE.RESET_FILTERS}
                   </button>
                 </div>
               )}
@@ -304,6 +304,10 @@ export default function Home() {
           onClose={() => setSelectedProduct(null)} 
         />
       )}
+
+      {/* Floating Compare Bar */}
+      <CompareFloatingBar />
     </div>
   );
 }
+

@@ -1,3 +1,12 @@
+/**
+ * LoginPage Component
+ * Renders the user login page with clean aesthetics, glassmorphism card, and error handling.
+ * Integrates with standard React state and useAuth facade hook.
+ *
+ * Related: src/app/register/page.tsx, src/hooks/useAuth.ts, src/app/globals.css
+ * Pattern: Interactive Authentication Screen
+ */
+
 'use client';
 
 import React, { useState } from 'react';
@@ -6,7 +15,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { LABELS } from '@/constants/labels';
 import { APP_CONFIG } from '@/constants/config';
 import { loginSchema } from '@/schemas/auth.schema';
-import { Smartphone, Mail, Lock, ArrowLeft, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Loader2 } from 'lucide-react';
+import SafeImage from '@/components/base/SafeImage';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -29,7 +39,7 @@ export default function LoginPage() {
 
     try {
       await login(result.data);
-    } catch (err: any) {
+    } catch {
       setIsLoading(false);
     }
   };
@@ -39,11 +49,15 @@ export default function LoginPage() {
       <div className="auth-card">
         {/* Header */}
         <div className="auth-header">
-          <img 
-            src="/remove_background_logo_phone_shop.png" 
-            alt="Sóc Mobile Logo" 
-            style={{ height: '60px', width: 'auto', objectFit: 'contain', marginBottom: '8px' }} 
-          />
+          <Link href={APP_CONFIG.ROUTES.HOME} style={{ display: 'flex', justifyContent: 'center' }}>
+            <SafeImage 
+              src="/remove_background_logo_phone_shop.png" 
+              alt="Sóc Mobile Logo" 
+              width={160}
+              height={56}
+              style={{ objectFit: 'contain', marginBottom: '8px' }} 
+            />
+          </Link>
           <h1 className="auth-title">{LABELS.AUTH.LOGIN_TITLE}</h1>
           <p className="auth-subtitle">{LABELS.AUTH.LOGIN_SUBTITLE}</p>
         </div>
@@ -61,7 +75,6 @@ export default function LoginPage() {
           <div className="auth-input-group">
             <label className="auth-input-label" htmlFor="email-input">{LABELS.AUTH.EMAIL_LOGIN}</label>
             <div className="auth-input-wrapper">
-              <Mail className="auth-input-icon" size={18} />
               <input
                 id="email-input"
                 type="email"
@@ -72,6 +85,7 @@ export default function LoginPage() {
                 required
                 className="auth-input"
               />
+              <Mail className="auth-input-icon" size={18} />
             </div>
           </div>
 
@@ -79,7 +93,6 @@ export default function LoginPage() {
           <div className="auth-input-group">
             <label className="auth-input-label" htmlFor="password-input">{LABELS.AUTH.PASSWORD_LOGIN}</label>
             <div className="auth-input-wrapper">
-              <Lock className="auth-input-icon" size={18} />
               <input
                 id="password-input"
                 type="password"
@@ -90,6 +103,7 @@ export default function LoginPage() {
                 required
                 className="auth-input"
               />
+              <Lock className="auth-input-icon" size={18} />
             </div>
           </div>
 
@@ -100,9 +114,9 @@ export default function LoginPage() {
             className="btn btn-primary auth-btn"
           >
             {isLoading ? (
-              <>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                 <Loader2 className="animate-spin" size={18} /> {LABELS.AUTH.LOGGING_IN}
-              </>
+              </span>
             ) : (
               LABELS.AUTH.LOGIN_BTN
             )}
@@ -111,7 +125,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="auth-footer">
-          <p>
+          <p style={{ margin: 0 }}>
             {LABELS.AUTH.NO_ACCOUNT}{' '}
             <Link href={APP_CONFIG.ROUTES.REGISTER} className="auth-link">
               {LABELS.AUTH.SIGNUP_NOW}

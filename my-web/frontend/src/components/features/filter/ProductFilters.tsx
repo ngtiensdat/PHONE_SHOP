@@ -1,7 +1,16 @@
+/**
+ * ProductFilters Component
+ * Interactive category, brand, and tag filters for the phone store.
+ *
+ * Related: src/app/page.tsx, src/constants/labels.ts
+ * Pattern: Filter Panel Presentation
+ */
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Gamepad2, Camera, BatteryCharging } from 'lucide-react';
+import { LABELS } from '@/constants/labels';
 
 interface ProductFiltersProps {
   activeCategory: string;
@@ -37,38 +46,38 @@ export default function ProductFilters({
   }, []);
 
   const needsTags = [
-    { value: 'All', label: 'Tất cả nhu cầu', icon: null },
-    { value: 'premium', label: 'Flagship Cao Cấp', icon: <Sparkles size={14} /> },
-    { value: 'gaming', label: 'Chơi Game/Cấu Hình', icon: <Gamepad2 size={14} /> },
-    { value: 'camera', label: 'Chụp Ảnh Đẹp', icon: <Camera size={14} /> },
-    { value: 'pin', label: 'Pin Trâu/Sạc Nhanh', icon: <BatteryCharging size={14} /> }
+    { value: 'All', label: LABELS.FILTERS.ALL_NEEDS, icon: null },
+    { value: 'premium', label: LABELS.FILTERS.NEED_PREMIUM, icon: <Sparkles size={14} /> },
+    { value: 'gaming', label: LABELS.FILTERS.NEED_GAMING, icon: <Gamepad2 size={14} /> },
+    { value: 'camera', label: LABELS.FILTERS.NEED_CAMERA, icon: <Camera size={14} /> },
+    { value: 'pin', label: LABELS.FILTERS.NEED_BATTERY, icon: <BatteryCharging size={14} /> }
   ];
 
   return (
     <div className="filter-panel-box">
       {/* Category Selector Row */}
       <div className="filter-row" style={{ paddingBottom: '16px', borderBottom: '1px solid var(--border-color)', marginBottom: '16px' }}>
-        <span className="filter-label">Danh mục:</span>
+        <span className="filter-label">{LABELS.FILTERS.CATEGORY_LABEL}</span>
         <div className="filter-options-scroll custom-scrollbar" style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'visible' }}>
           <button
             type="button"
-            className={`filter-chip-btn ${activeCategory === 'Điện thoại' ? 'active' : ''}`}
+            className={`filter-chip-btn ${activeCategory === LABELS.FILTERS.CATEGORY_MOBILE ? 'active' : ''}`}
             onClick={() => {
-              setActiveCategory('Điện thoại');
+              setActiveCategory(LABELS.FILTERS.CATEGORY_MOBILE);
               setActiveBrand('All');
             }}
           >
-            Điện thoại
+            {LABELS.FILTERS.CATEGORY_MOBILE}
           </button>
           
           {/* Dropdown Khác */}
           <div style={{ position: 'relative' }} ref={categoryDropdownRef}>
             <button
               type="button"
-              className={`filter-chip-btn ${activeCategory !== 'Điện thoại' ? 'active' : ''}`}
+              className={`filter-chip-btn ${activeCategory !== LABELS.FILTERS.CATEGORY_MOBILE ? 'active' : ''}`}
               onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
             >
-              {activeCategory === 'Điện thoại' ? 'Khác' : activeCategory} ▾
+              {activeCategory === LABELS.FILTERS.CATEGORY_MOBILE ? LABELS.FILTERS.CATEGORY_OTHER : activeCategory} ▾
             </button>
             
             {showCategoryDropdown && (
@@ -87,7 +96,7 @@ export default function ProductFilters({
                 flexDirection: 'column',
                 gap: '2px'
               }}>
-                {['Laptop', 'Máy tính bảng', 'Đồng hồ thông minh'].map((cat) => (
+                {[LABELS.FILTERS.CATEGORY_LAPTOP, LABELS.FILTERS.CATEGORY_TABLET, LABELS.FILTERS.CATEGORY_WATCH, LABELS.FILTERS.CATEGORY_ACCESSORY].map((cat) => (
                   <button
                     key={cat}
                     type="button"
@@ -119,7 +128,7 @@ export default function ProductFilters({
 
       {/* Brands Filter Row */}
       <div className="filter-row">
-        <span className="filter-label">Hãng sản xuất:</span>
+        <span className="filter-label">{LABELS.FILTERS.BRAND_LABEL}</span>
         <div className="filter-options-scroll custom-scrollbar">
           {brands.map((brand) => (
             <button
@@ -128,7 +137,7 @@ export default function ProductFilters({
               className={`filter-chip-btn ${activeBrand === brand ? 'active' : ''}`}
               onClick={() => setActiveBrand(brand)}
             >
-              {brand === 'All' ? 'Tất cả' : brand}
+              {brand === 'All' ? LABELS.FILTERS.ALL_BRANDS : brand}
             </button>
           ))}
         </div>
@@ -136,7 +145,7 @@ export default function ProductFilters({
 
       {/* Needs Filter Row */}
       <div className="filter-row" style={{ marginTop: '16px', borderTop: '1px dashed var(--border-color)', paddingTop: '16px' }}>
-        <span className="filter-label">Chọn theo nhu cầu:</span>
+        <span className="filter-label">{LABELS.FILTERS.NEED_LABEL}</span>
         <div className="filter-options-scroll custom-scrollbar">
           {needsTags.map((tag) => (
             <button
@@ -154,3 +163,4 @@ export default function ProductFilters({
     </div>
   );
 }
+

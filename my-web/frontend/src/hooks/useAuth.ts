@@ -9,13 +9,11 @@
 'use client';
 
 import { useAuthStore } from '@/store/useAuthStore';
-import type { AuthUser } from '@/store/useAuthStore';
-import { authService } from '@/services/auth.service';
+import { authService, LoginDto, RegisterDto } from '@/services/auth.service';
 import { toast } from '@/store/useToastStore';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect } from 'react';
 import { useCartStore } from '@/store/useCartStore';
-import { APP_CONFIG } from '@/constants/config';
 import { handleRefreshToken } from '@/lib/api-client';
 
 export function useAuth() {
@@ -35,7 +33,7 @@ export function useAuth() {
         const profile = await authService.getProfile();
         setUser(profile);
       }
-    } catch (err) {
+    } catch {
       // Silently ignore initialization errors (means guest user)
     } finally {
       setInitialized(true);
@@ -49,7 +47,7 @@ export function useAuth() {
 
   // Login handler
   const login = useCallback(
-    async (credentials: any) => {
+    async (credentials: LoginDto) => {
       try {
         const data = await authService.login(credentials);
 
@@ -63,10 +61,11 @@ export function useAuth() {
         } else if (data.user.role === 'STAFF') {
           router.push('/admin/orders');
         } else {
-          router.push('/dashboard');
+          router.push('/');
         }
-      } catch (err: any) {
-        toast.error(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.';
+        toast.error(message);
         throw err;
       }
     },
@@ -89,13 +88,14 @@ export function useAuth() {
 
   // Register handler
   const register = useCallback(
-    async (data: any) => {
+    async (data: RegisterDto) => {
       try {
         await authService.register(data);
         toast.success('Đăng ký tài khoản thành công! Tiến hành đăng nhập.');
         router.push('/login');
-      } catch (err: any) {
-        toast.error(err.message || 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.');
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.';
+        toast.error(message);
         throw err;
       }
     },

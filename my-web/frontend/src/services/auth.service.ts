@@ -10,14 +10,26 @@
 import { api } from '@/lib/api-client';
 import { AuthUser } from '@/store/useAuthStore';
 
+export interface LoginDto {
+  email?: string;
+  password?: string;
+}
+
+export interface RegisterDto {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+}
+
 export const authService = {
-  login: async (credentials: any) => {
+  login: async (credentials: LoginDto) => {
     return api.post<{ accessToken: string; user: AuthUser }>('/auth/login', credentials, {
       skipAuth: true,
     });
   },
 
-  register: async (data: any) => {
+  register: async (data: RegisterDto) => {
     return api.post<AuthUser>('/auth/register', data, {
       skipAuth: true,
     });

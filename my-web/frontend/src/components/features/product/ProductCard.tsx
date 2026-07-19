@@ -3,7 +3,7 @@
  * Renders a highly-detailed, professional smartphone product card.
  * Supports interactive variant switching (RAM/ROM), rating, promos, and specs.
  *
- * Related: src/components/base/SafeImage.tsx, src/utils/format.ts, src/data/mock-products.ts
+ * Related: src/components/base/SafeImage.tsx, src/utils/format.ts, src/types/product.ts, src/constants/labels.ts
  * Pattern: Interactive Product Presentation
  */
 
@@ -14,7 +14,10 @@ import Link from 'next/link';
 import { Star, Zap, GitCompare, Heart, Gift } from 'lucide-react';
 import SafeImage from '@/components/base/SafeImage';
 import { formatVND } from '@/utils/format';
-import { MockProduct } from '@/data/mock-products';
+import { MockProduct, ProductVariant } from '@/types/product';
+import { LABELS } from '@/constants/labels';
+import { useCompareStore } from '@/store/useCompareStore';
+import { useIsMounted } from '@/hooks/useIsMounted';
 
 interface ProductCardProps {
   product: MockProduct;
@@ -22,15 +25,19 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onViewDetail }: ProductCardProps) {
+  const isMounted = useIsMounted();
+
   // Default to first variant
-  const [selectedVariant, setSelectedVariant] = useState(product.variants[0] || {
-    storage: 'Mặc định',
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(product.variants[0] || {
+    storage: LABELS.PRODUCT.DEFAULT_VARIANT,
     price: product.price,
     oldPrice: product.price * 1.1 // fallback
   });
 
   const [isLiked, setIsLiked] = useState(false);
-  const [isCompared, setIsCompared] = useState(false);
+  const comparedProducts = useCompareStore((state) => state.comparedProducts);
+  const addCompare = useCompareStore((state) => state.addProduct);
+  const isCompared = isMounted && comparedProducts.some((p) => p.id === product.id);
 
   const discountPercent = Math.round(
     ((selectedVariant.oldPrice - selectedVariant.price) / selectedVariant.oldPrice) * 100
@@ -43,11 +50,11 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
       {/* Top action badges */}
       <div className="product-card-top-meta">
         {product.installment && (
-          <span className="badge-installment">Trả góp 0%</span>
+          <span className="badge-installment">{LABELS.PRODUCT.INSTALLMENT_BADGE}</span>
         )}
         {product.fastDelivery && (
           <span className="badge-fast-delivery">
-            <Zap size={10} fill="currentColor" /> Giao 2h
+            <Zap size={10} fill="currentColor" /> {LABELS.PRODUCT.FAST_DELIVERY_BADGE}
           </span>
         )}
       </div>
@@ -73,7 +80,7 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
             />
           </Link>
         )}
-        {product.badge && product.badge !== 'Trả góp 0%' && (
+        {product.badge && product.badge !== LABELS.PRODUCT.INSTALLMENT_BADGE && (
           <span className={`badge badge-${product.badgeType} product-card-badge`}>
             {product.badge}
           </span>
@@ -115,7 +122,7 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
         <div className="product-mini-specs">
           <span>{product.specs.screen}</span>
           <span>{product.specs.chip}</span>
-          <span>{product.specs.ram} RAM</span>
+          <span>{product.specs.ram}</span>
         </div>
 
         {/* Price Row */}
@@ -142,9 +149,9 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
           <div className="product-rating">
             <Star size={12} fill="#ff9f0a" color="#ff9f0a" />
             <span className="rating-num">{product.rating.toFixed(1)}</span>
-            <span className="review-count">({product.reviewCount > 1000 ? `${(product.reviewCount / 1000).toFixed(0)}k` : product.reviewCount} đánh giá)</span>
+            <span className="review-count">({product.reviewCount > 1000 ? `${(product.reviewCount / 1000).toFixed(0)}k` : product.reviewCount} {LABELS.PRODUCT.REVIEWS})</span>
           </div>
-          <span className="sold-count-badge">Đã bán {product.soldCount}</span>
+          <span className="sold-count-badge">{LABELS.PRODUCT.SOLD} {product.soldCount}</span>
         </div>
 
         {/* Quick Action Footer */}
@@ -152,29 +159,29 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
           <button
             type="button"
             className={`action-btn compare-btn ${isCompared ? 'active' : ''}`}
-            onClick={() => setIsCompared(!isCompared)}
-            title="So sánh cấu hình"
+            onClick={() => addCompare(product)}
+            title={LABELS.PRODUCT.COMPARE_TOOLTIP}
           >
             <GitCompare size={16} />
-            <span>{isCompared ? 'Đang so sánh' : 'So sánh'}</span>
+            <span>{isCompared ? LABELS.PRODUCT.COMPARE_STATUS_ACTIVE : LABELS.PRODUCT.COMPARE_STATUS_INACTIVE}</span>
           </button>
 
           <button
             type="button"
             className={`action-icon-btn fav-btn ${isLiked ? 'liked' : ''}`}
             onClick={() => setIsLiked(!isLiked)}
-            title="Thêm vào yêu thích"
+            title={LABELS.PRODUCT.FAVORITE_TOOLTIP}
           >
             <Heart size={16} fill={isLiked ? 'currentColor' : 'none'} />
           </button>
 
           {onViewDetail ? (
             <button type="button" onClick={onViewDetail} className="btn btn-primary btn-sm btn-buy-now">
-              Mua Ngay
+              {LABELS.COMMON.BUY_NOW}
             </button>
           ) : (
             <Link href={`/products/${product.slug}`} className="btn btn-primary btn-sm btn-buy-now">
-              Mua Ngay
+              {LABELS.COMMON.BUY_NOW}
             </Link>
           )}
         </div>

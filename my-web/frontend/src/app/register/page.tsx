@@ -1,3 +1,12 @@
+/**
+ * RegisterPage Component
+ * Renders the user registration screen with clean glassmorphism card design and validation.
+ * Uses useAuth facade hook for the business logic.
+ *
+ * Related: src/app/login/page.tsx, src/hooks/useAuth.ts, src/app/globals.css
+ * Pattern: Interactive Authentication Screen
+ */
+
 'use client';
 
 import React, { useState } from 'react';
@@ -6,7 +15,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { LABELS } from '@/constants/labels';
 import { APP_CONFIG } from '@/constants/config';
 import { registerSchema } from '@/schemas/auth.schema';
-import { Smartphone, Mail, Lock, User, Phone, ArrowLeft, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, Phone, ArrowLeft, Loader2 } from 'lucide-react';
+import SafeImage from '@/components/base/SafeImage';
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -45,7 +55,7 @@ export default function RegisterPage() {
         phone: result.data.phone || undefined,
         password: result.data.password,
       });
-    } catch (err: any) {
+    } catch {
       setIsLoading(false);
     }
   };
@@ -55,11 +65,15 @@ export default function RegisterPage() {
       <div className="auth-card" style={{ maxWidth: '480px' }}>
         {/* Header */}
         <div className="auth-header">
-          <img 
-            src="/remove_background_logo_phone_shop.png" 
-            alt="Sóc Mobile Logo" 
-            style={{ height: '60px', width: 'auto', objectFit: 'contain', marginBottom: '8px' }} 
-          />
+          <Link href={APP_CONFIG.ROUTES.HOME} style={{ display: 'flex', justifyContent: 'center' }}>
+            <SafeImage 
+              src="/remove_background_logo_phone_shop.png" 
+              alt="Sóc Mobile Logo" 
+              width={160}
+              height={56}
+              style={{ objectFit: 'contain', marginBottom: '8px' }} 
+            />
+          </Link>
           <h1 className="auth-title">{LABELS.AUTH.REGISTER_TITLE}</h1>
           <p className="auth-subtitle">{LABELS.AUTH.REGISTER_SUBTITLE}</p>
         </div>
@@ -77,7 +91,6 @@ export default function RegisterPage() {
           <div className="auth-input-group">
             <label className="auth-input-label" htmlFor="fullName-input">{LABELS.AUTH.FULL_NAME}</label>
             <div className="auth-input-wrapper">
-              <User className="auth-input-icon" size={18} />
               <input
                 id="fullName-input"
                 type="text"
@@ -88,6 +101,7 @@ export default function RegisterPage() {
                 required
                 className="auth-input"
               />
+              <User className="auth-input-icon" size={18} />
             </div>
           </div>
 
@@ -95,7 +109,6 @@ export default function RegisterPage() {
           <div className="auth-input-group">
             <label className="auth-input-label" htmlFor="email-input">{LABELS.AUTH.EMAIL}</label>
             <div className="auth-input-wrapper">
-              <Mail className="auth-input-icon" size={18} />
               <input
                 id="email-input"
                 type="email"
@@ -106,6 +119,7 @@ export default function RegisterPage() {
                 required
                 className="auth-input"
               />
+              <Mail className="auth-input-icon" size={18} />
             </div>
           </div>
 
@@ -113,7 +127,6 @@ export default function RegisterPage() {
           <div className="auth-input-group">
             <label className="auth-input-label" htmlFor="phone-input">{LABELS.AUTH.PHONE}</label>
             <div className="auth-input-wrapper">
-              <Phone className="auth-input-icon" size={18} />
               <input
                 id="phone-input"
                 type="tel"
@@ -123,6 +136,7 @@ export default function RegisterPage() {
                 disabled={isLoading}
                 className="auth-input"
               />
+              <Phone className="auth-input-icon" size={18} />
             </div>
           </div>
 
@@ -130,7 +144,6 @@ export default function RegisterPage() {
           <div className="auth-input-group">
             <label className="auth-input-label" htmlFor="password-input">{LABELS.AUTH.PASSWORD}</label>
             <div className="auth-input-wrapper">
-              <Lock className="auth-input-icon" size={18} />
               <input
                 id="password-input"
                 type="password"
@@ -141,6 +154,7 @@ export default function RegisterPage() {
                 required
                 className="auth-input"
               />
+              <Lock className="auth-input-icon" size={18} />
             </div>
           </div>
 
@@ -148,7 +162,6 @@ export default function RegisterPage() {
           <div className="auth-input-group">
             <label className="auth-input-label" htmlFor="confirmPassword-input">{LABELS.AUTH.CONFIRM_PASSWORD}</label>
             <div className="auth-input-wrapper">
-              <Lock className="auth-input-icon" size={18} />
               <input
                 id="confirmPassword-input"
                 type="password"
@@ -159,6 +172,7 @@ export default function RegisterPage() {
                 required
                 className="auth-input"
               />
+              <Lock className="auth-input-icon" size={18} />
             </div>
           </div>
 
@@ -169,9 +183,9 @@ export default function RegisterPage() {
             className="btn btn-primary auth-btn"
           >
             {isLoading ? (
-              <>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                 <Loader2 className="animate-spin" size={18} /> {LABELS.AUTH.REGISTERING}
-              </>
+              </span>
             ) : (
               LABELS.AUTH.REGISTER_BTN
             )}
@@ -180,7 +194,7 @@ export default function RegisterPage() {
 
         {/* Footer */}
         <div className="auth-footer">
-          <p>
+          <p style={{ margin: 0 }}>
             {LABELS.AUTH.ALREADY_ACCOUNT}{' '}
             <Link href={APP_CONFIG.ROUTES.LOGIN} className="auth-link">
               {LABELS.AUTH.SIGNIN_NOW}

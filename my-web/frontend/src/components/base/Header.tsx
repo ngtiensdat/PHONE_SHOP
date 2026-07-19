@@ -1,20 +1,10 @@
-/**
- * Header Component
- * Global navigation header for PHONE_SHOP application.
- * Features: Location selector, autocomplete search bar, hotlines, and auth status.
- *
- * Related: src/app/layout.tsx, src/app/globals.css, src/hooks/useAuth.ts
- * Pattern: Interactive Header with Navigation
- */
-
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   ShoppingBag, 
-  Smartphone, 
   Search, 
   MapPin, 
   Phone, 
@@ -22,12 +12,21 @@ import {
   User, 
   ChevronDown, 
   X,
-  History
+  Smartphone,
+  CreditCard,
+  Bot,
+  ShieldCheck,
+  Store,
+  Grid,
+  Navigation,
+  Loader2
 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { LABELS } from '@/constants/labels';
 import { APP_CONFIG } from '@/constants/config';
+import { CITY_COORDINATES, getNearestCity } from '@/utils/locationUtils';
+import { toast } from '@/store/useToastStore';
 
 const POPULAR_SEARCHES = [
   'iPhone 17 Pro Max',
@@ -37,8 +36,6 @@ const POPULAR_SEARCHES = [
   'Điện thoại dưới 10 triệu'
 ];
 
-const LOCATIONS = ['Hồ Chí Minh', 'Hà Nội', 'Đà Nẵng', 'Cần Thơ', 'Hải Phòng'];
-
 export default function Header() {
   const router = useRouter();
   const { totalItems } = useCart();
@@ -47,12 +44,76 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState('Hồ Chí Minh');
+  const [nearestStore, setNearestStore] = useState('123 Nguyễn Trãi, Q.1');
+  const [isLocating, setIsLocating] = useState(false);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   const searchRef = useRef<HTMLDivElement>(null);
   const locationRef = useRef<HTMLDivElement>(null);
   const userRef = useRef<HTMLDivElement>(null);
+
+  const detectGPSLocation = useCallback((showToast = true) => {
+    if (!navigator.geolocation) {
+      if (showToast) toast.error('Trình duyệt của bạn không hỗ trợ định vị GPS.');
+      return;
+    }
+
+    setIsLocating(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const nearest = getNearestCity(latitude, longitude);
+
+        setSelectedLocation(nearest.name);
+        setNearestStore(nearest.nearestStoreAddress);
+        localStorage.setItem('user-location', nearest.name);
+        localStorage.setItem('user-nearest-store', nearest.nearestStoreAddress);
+
+        setIsLocating(false);
+        if (showToast) {
+          toast.success(`Đã định vị vị trí gần nhất: ${nearest.name} (${nearest.nearestStoreAddress})`);
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        if (showToast) {
+          if (error.code === error.PERMISSION_DENIED) {
+            toast.warning('Bạn đã từ chối quyền truy cập GPS. Vui lòng chọn vị trí thủ công.');
+          } else {
+            toast.error('Không thể lấy vị trí GPS hiện tại.');
+          }
+        }
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  }, []);
+
+  // Load saved location from localStorage or detect GPS after client mount (prevents SSR Hydration mismatch)
+  useEffect(() => {
+    const savedLoc = localStorage.getItem('user-location');
+    const savedStore = localStorage.getItem('user-nearest-store');
+    
+    if (savedLoc && savedStore) {
+      setSelectedLocation(savedLoc);
+      setNearestStore(savedStore);
+    } else {
+      detectGPSLocation(false);
+    }
+  }, [detectGPSLocation]);
+
+  const handleSelectLocationManually = (cityName: string) => {
+    const cityObj = CITY_COORDINATES.find(c => c.name === cityName);
+    const storeAddr = cityObj ? cityObj.nearestStoreAddress : 'Showroom Sóc Mobile';
+
+    setSelectedLocation(cityName);
+    setNearestStore(storeAddr);
+    localStorage.setItem('user-location', cityName);
+    localStorage.setItem('user-nearest-store', storeAddr);
+    setShowLocationDropdown(false);
+    toast.info(`Đã đổi khu vực xem giá: ${cityName}`);
+  };
 
   // Close dropdowns on click outside
   useEffect(() => {
@@ -87,200 +148,251 @@ export default function Header() {
 
   return (
     <header className="site-header">
-      <div className="header-container">
-        
-        {/* Logo */}
-        <Link href={APP_CONFIG.ROUTES.HOME} className="header-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img 
-            src="/remove_background_logo_phone_shop.png" 
-            alt="Sóc Mobile Logo" 
-            style={{ height: '36px', width: 'auto', objectFit: 'contain' }} 
-          />
-          <span className="logo-text">
-            Sóc <span className="logo-highlight">Mobile</span>
-          </span>
-        </Link>
-
-        {/* Location Selector */}
-        <div className="location-selector-wrapper" ref={locationRef}>
-          <button 
-            type="button" 
-            className="header-location-btn" 
-            onClick={() => setShowLocationDropdown(!showLocationDropdown)}
-          >
-            <MapPin size={16} className="loc-icon" />
-            <div className="loc-text">
-              <span className="loc-title">Xem giá tại</span>
-              <span className="loc-value">{selectedLocation}</span>
-            </div>
-            <ChevronDown size={14} className="chevron-icon" />
-          </button>
+      {/* Top Main Bar */}
+      <div className="header-main-bar">
+        <div className="header-container">
           
-          {showLocationDropdown && (
-            <ul className="location-dropdown-menu">
-              {LOCATIONS.map(loc => (
-                <li key={loc}>
-                  <button 
-                    type="button" 
-                    className={selectedLocation === loc ? 'active' : ''}
-                    onClick={() => {
-                      setSelectedLocation(loc);
-                      setShowLocationDropdown(false);
-                    }}
-                  >
-                    {loc}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Search Bar */}
-        <div className="header-search-container" ref={searchRef}>
-          <form onSubmit={handleSearchSubmit} className="header-search-form">
-            <input
-              type="text"
-              placeholder="Bạn cần tìm điện thoại gì?..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setShowSuggestions(true)}
-              className="header-search-input"
+          {/* Logo */}
+          <Link href={APP_CONFIG.ROUTES.HOME} className="header-logo">
+            <img 
+              src="/remove_background_logo_phone_shop.png" 
+              alt="Sóc Mobile Logo" 
+              className="logo-img"
             />
-            {searchQuery && (
-              <button 
-                type="button" 
-                className="search-clear-btn" 
-                onClick={() => setSearchQuery('')}
-              >
-                <X size={16} />
-              </button>
-            )}
-            <button type="submit" className="header-search-btn">
-              <Search size={18} />
-            </button>
-          </form>
+            <span className="logo-text">
+              Sóc <span className="logo-highlight">Mobile</span>
+            </span>
+          </Link>
 
-          {/* Suggestions Dropdown */}
-          {showSuggestions && (
-            <div className="search-suggestions-panel">
-              <div className="suggestion-section">
-                <span className="suggestion-title">Tìm kiếm phổ biến</span>
-                <div className="suggestion-keywords">
-                  {POPULAR_SEARCHES.map((keyword) => (
-                    <button
-                      key={keyword}
-                      type="button"
-                      className="keyword-chip"
-                      onClick={() => handleSuggestionClick(keyword)}
-                    >
-                      {keyword}
-                    </button>
-                  ))}
-                </div>
+          {/* Location Selector with GPS & Nearest Store */}
+          <div className="location-selector-wrapper" ref={locationRef}>
+            <button 
+              type="button" 
+              className="header-location-btn" 
+              onClick={() => setShowLocationDropdown(!showLocationDropdown)}
+              title={`Cửa hàng gần nhất: ${nearestStore}`}
+            >
+              <MapPin size={14} className="loc-icon" />
+              <div className="loc-text">
+                <span className="loc-title">Giá tại <strong>{selectedLocation}</strong></span>
+                <span className="loc-value">{nearestStore}</span>
               </div>
-              
-              {searchQuery && (
-                <div className="suggestion-section suggestion-predictive">
-                  <span className="suggestion-title">Gợi ý tìm kiếm cho "{searchQuery}"</span>
-                  <button 
-                    type="button" 
-                    className="predictive-item"
-                    onClick={() => handleSuggestionClick(searchQuery)}
-                  >
-                    <Search size={14} style={{ marginRight: '8px' }} />
-                    Tìm kiếm sản phẩm chứa: <strong>{searchQuery}</strong>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Contact Hotline */}
-        <div className="header-hotline">
-          <Phone size={16} className="hotline-icon" />
-          <div className="hotline-info">
-            <span className="hotline-label">Gọi mua hàng</span>
-            <a href="tel:18002097" className="hotline-number">1800.2097</a>
-          </div>
-        </div>
-
-        {/* Track Orders */}
-        <Link href="/orders/track" className="header-track-btn">
-          <FileText size={18} />
-          <span>Tra cứu<br/>đơn hàng</span>
-        </Link>
-
-        {/* Cart Button */}
-        <Link href={APP_CONFIG.ROUTES.CART} className="header-cart-btn btn-primary">
-          <div className="cart-icon-wrapper">
-            <ShoppingBag size={20} />
-            {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
-          </div>
-          <span className="cart-btn-text">{LABELS.COMMON.CART}</span>
-        </Link>
-
-        {/* User Account / Login */}
-        <div className="header-user-account" ref={userRef}>
-          {isAuthenticated && user ? (
-            <>
-              <button 
-                type="button" 
-                className="user-profile-trigger" 
-                onClick={() => setShowUserDropdown(!showUserDropdown)}
-              >
-                <div className="avatar-placeholder">
-                  {user.fullName ? user.fullName[0].toUpperCase() : user.email[0].toUpperCase()}
-                </div>
-                <span className="username-text">{user.fullName || 'Tài khoản'}</span>
-                <ChevronDown size={14} />
-              </button>
-              
-              {showUserDropdown && (
-                <ul className="user-dropdown-menu">
-                  <li>
-                    <Link href="/dashboard" onClick={() => setShowUserDropdown(false)}>
-                      Trang cá nhân
-                    </Link>
-                  </li>
-                  {user.role === 'ADMIN' && (
-                    <li>
-                      <Link href="/admin" onClick={() => setShowUserDropdown(false)}>
-                        Quản trị hệ thống
-                      </Link>
-                    </li>
+              <ChevronDown size={12} className="chevron-icon" />
+            </button>
+            
+            {showLocationDropdown && (
+              <div className="location-dropdown-menu">
+                {/* Auto GPS Trigger Button */}
+                <button
+                  type="button"
+                  className="gps-detect-btn"
+                  onClick={() => detectGPSLocation(true)}
+                  disabled={isLocating}
+                >
+                  {isLocating ? (
+                    <>
+                      <Loader2 size={13} className="animate-spin" />
+                      <span>Đang quét vị trí GPS...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Navigation size={13} style={{ color: '#00f2fe' }} />
+                      <span>Tự động định vị GPS gần bạn</span>
+                    </>
                   )}
-                  <li>
-                    <Link href="/orders" onClick={() => setShowUserDropdown(false)}>
-                      Lịch sử mua hàng
-                    </Link>
-                  </li>
-                  <li className="dropdown-divider"></li>
-                  <li>
+                </button>
+
+                <div className="dropdown-divider" style={{ margin: '4px 0' }}></div>
+
+                <div style={{ padding: '4px 12px 2px', fontSize: '10px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  Chọn Tỉnh/Thành phố
+                </div>
+
+                {CITY_COORDINATES.map(city => (
+                  <button 
+                    key={city.name}
+                    type="button" 
+                    className={selectedLocation === city.name ? 'active' : ''}
+                    onClick={() => handleSelectLocationManually(city.name)}
+                  >
+                    <span>{city.name}</span>
+                    <span className="store-sub">{city.nearestStoreAddress}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Search Bar */}
+          <div className="header-search-container" ref={searchRef}>
+            <form onSubmit={handleSearchSubmit} className="header-search-form">
+              <input
+                type="text"
+                placeholder="Bạn cần tìm điện thoại gì?..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
+                className="header-search-input"
+              />
+              {searchQuery && (
+                <button 
+                  type="button" 
+                  className="search-clear-btn" 
+                  onClick={() => setSearchQuery('')}
+                >
+                  <X size={14} />
+                </button>
+              )}
+              <button type="submit" className="header-search-btn">
+                <Search size={15} />
+              </button>
+            </form>
+
+            {/* Suggestions Dropdown */}
+            {showSuggestions && (
+              <div className="search-suggestions-panel">
+                <div className="suggestion-section">
+                  <span className="suggestion-title">Tìm kiếm phổ biến</span>
+                  <div className="suggestion-keywords">
+                    {POPULAR_SEARCHES.map((keyword) => (
+                      <button
+                        key={keyword}
+                        type="button"
+                        className="keyword-chip"
+                        onClick={() => handleSuggestionClick(keyword)}
+                      >
+                        {keyword}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {searchQuery && (
+                  <div className="suggestion-section suggestion-predictive">
+                    <span className="suggestion-title">Gợi ý tìm kiếm cho &quot;{searchQuery}&quot;</span>
                     <button 
                       type="button" 
-                      onClick={() => {
-                        void logout();
-                        setShowUserDropdown(false);
-                      }}
-                      className="logout-action-btn"
+                      className="predictive-item"
+                      onClick={() => handleSuggestionClick(searchQuery)}
                     >
-                      Đăng xuất
+                      <Search size={14} style={{ marginRight: '8px' }} />
+                      Tìm kiếm sản phẩm chứa: <strong>{searchQuery}</strong>
                     </button>
-                  </li>
-                </ul>
-              )}
-            </>
-          ) : (
-            <Link href={APP_CONFIG.ROUTES.LOGIN} className="header-login-btn">
-              <User size={20} />
-              <span>Đăng nhập</span>
-            </Link>
-          )}
-        </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
+          {/* Contact Hotline */}
+          <a href="tel:18002097" className="header-hotline">
+            <Phone size={15} className="hotline-icon" />
+            <div className="hotline-info">
+              <span className="hotline-label">Gọi mua hàng</span>
+              <span className="hotline-number">1800.2097</span>
+            </div>
+          </a>
+
+          {/* Track Orders */}
+          <Link href="/orders/track" className="header-track-btn">
+            <FileText size={16} />
+            <span>Tra cứu đơn hàng</span>
+          </Link>
+
+          {/* Cart Button */}
+          <Link href={APP_CONFIG.ROUTES.CART} className="header-cart-btn">
+            <div className="cart-icon-wrapper">
+              <ShoppingBag size={18} />
+              {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
+            </div>
+            <span className="cart-btn-text">{LABELS.COMMON.CART}</span>
+          </Link>
+
+          {/* User Account / Login */}
+          <div className="header-user-account" ref={userRef}>
+            {isAuthenticated && user ? (
+              <>
+                <button 
+                  type="button" 
+                  className="user-profile-trigger" 
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                >
+                  <div className="avatar-placeholder">
+                    {user.fullName ? user.fullName[0].toUpperCase() : user.email[0].toUpperCase()}
+                  </div>
+                  <span className="username-text">{user.fullName || 'Tài khoản'}</span>
+                  <ChevronDown size={12} />
+                </button>
+                
+                {showUserDropdown && (
+                  <ul className="user-dropdown-menu">
+                    <li>
+                      <Link href="/dashboard" onClick={() => setShowUserDropdown(false)}>
+                        Trang cá nhân
+                      </Link>
+                    </li>
+                    {user.role === 'ADMIN' && (
+                      <li>
+                        <Link href="/admin" onClick={() => setShowUserDropdown(false)}>
+                          Quản trị hệ thống
+                        </Link>
+                      </li>
+                    )}
+                    <li>
+                      <Link href="/orders" onClick={() => setShowUserDropdown(false)}>
+                        Lịch sử mua hàng
+                      </Link>
+                    </li>
+                    <li className="dropdown-divider"></li>
+                    <li>
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          void logout();
+                          setShowUserDropdown(false);
+                        }}
+                        className="logout-action-btn"
+                      >
+                        Đăng xuất
+                      </button>
+                    </li>
+                  </ul>
+                )}
+              </>
+            ) : (
+              <Link href={APP_CONFIG.ROUTES.LOGIN} className="header-login-btn">
+                <User size={18} />
+                <span>Đăng nhập</span>
+              </Link>
+            )}
+          </div>
+
+        </div>
       </div>
+
+      {/* Clean Secondary Navigation Bar */}
+      <nav className="header-subnav">
+        <div className="header-subnav-container">
+          <Link href="/products" className="subnav-link">
+            <Smartphone size={15} /> <span>Điện thoại</span>
+          </Link>
+          <Link href="/tra-gop" className="subnav-link highlight">
+            <CreditCard size={15} /> <span>Trả góp 0%</span>
+          </Link>
+          <Link href="/compare" className="subnav-link ai-nav">
+            <Bot size={15} /> <span>So sánh AI</span> <span className="nav-tag">AI</span>
+          </Link>
+          <Link href="/bao-hanh" className="subnav-link">
+            <ShieldCheck size={15} /> <span>Bảo hành VIP</span>
+          </Link>
+          <Link href="/dia-chi" className="subnav-link">
+            <Store size={15} /> <span>Cửa hàng (50+)</span>
+          </Link>
+          <Link href="/gioi-thieu" className="subnav-link">
+            <Grid size={15} /> <span>Giới thiệu</span>
+          </Link>
+        </div>
+      </nav>
     </header>
   );
 }

@@ -15,22 +15,22 @@ export interface CartItemDto {
 
 export const cartService = {
   getCart: async () => {
-    return api.get<any>('/cart');
+    return api.get<unknown>('/cart');
   },
 
   addItem: async (dto: CartItemDto) => {
-    return api.post<any>('/cart/items', dto);
+    return api.post<unknown>('/cart/items', dto);
   },
 
   updateQuantity: async (variantId: number, quantity: number) => {
-    return api.put<any>(`/cart/items/${variantId}`, { quantity });
+    return api.put<unknown>(`/cart/items/${variantId}`, { quantity });
   },
 
   removeItem: async (variantId: number) => {
-    return api.delete<any>(`/cart/items/${variantId}`);
+    return api.delete<unknown>(`/cart/items/${variantId}`);
   },
 
   clearCart: async () => {
-    return api.delete<any>('/cart');
+    return api.delete<unknown>('/cart');
   },
 };

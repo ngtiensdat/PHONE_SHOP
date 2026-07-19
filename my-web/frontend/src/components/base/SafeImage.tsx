@@ -9,7 +9,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image, { ImageProps } from 'next/image';
 
 const WHITELISTED_DOMAINS = [
@@ -23,64 +23,52 @@ interface SafeImageProps extends Omit<ImageProps, 'onError'> {
   fallbackSrc?: string;
 }
 
+function checkIsExternal(srcStr: string): boolean {
+  if (srcStr.startsWith('http://') || srcStr.startsWith('https://')) {
+    try {
+      const url = new URL(srcStr);
+      const domain = url.hostname;
+      return !WHITELISTED_DOMAINS.some(
+        (allowed) => domain === allowed || domain.endsWith(`.${allowed}`)
+      );
+    } catch {
+      return true;
+    }
+  }
+  return false;
+}
+
 export default function SafeImage({
   src,
   alt,
   fallbackSrc = '/placeholder-phone.svg',
   ...props
 }: SafeImageProps) {
-  const [imgSrc, setImgSrc] = useState<string>('');
-  const [useHtmlImg, setUseHtmlImg] = useState<boolean>(false);
+  const srcStr = typeof src === 'string' ? src : '';
+  const initialUseHtmlImg = checkIsExternal(srcStr);
+
   const [hasError, setHasError] = useState<boolean>(false);
+  const [overrideSrc, setOverrideSrc] = useState<string | null>(null);
+  const [useHtmlImg, setUseHtmlImg] = useState<boolean>(initialUseHtmlImg);
 
-  useEffect(() => {
-    if (!src) {
-      setImgSrc(fallbackSrc);
-      return;
-    }
-
-    const srcStr = typeof src === 'string' ? src : '';
-
-    if (srcStr.startsWith('http://') || srcStr.startsWith('https://')) {
-      try {
-        const url = new URL(srcStr);
-        const domain = url.hostname;
-
-        // Check if the domain is in our whitelist
-        const isWhitelisted = WHITELISTED_DOMAINS.some(
-          (allowed) => domain === allowed || domain.endsWith(`.${allowed}`)
-        );
-
-        if (!isWhitelisted) {
-          // If not whitelisted, fall back to standard HTML <img> to avoid Next.js Image Optimization limits
-          setUseHtmlImg(true);
-        }
-      } catch {
-        setUseHtmlImg(true);
-      }
-    }
-
-    setImgSrc(srcStr);
-  }, [src, fallbackSrc]);
+  const currentSrc = overrideSrc ?? (srcStr || fallbackSrc);
 
   const handleError = () => {
     if (!hasError) {
       setHasError(true);
-      setImgSrc(fallbackSrc);
-      setUseHtmlImg(true); // Switch to HTML img just in case the fallback is external too
+      setOverrideSrc(fallbackSrc);
+      setUseHtmlImg(true);
     }
   };
 
-  if (useHtmlImg || !imgSrc) {
-    // Standard HTML Image tag fallback
-    // eslint-disable-next-line @next/next/no-img-element
+  if (useHtmlImg || !currentSrc) {
     return (
       <img
-        src={imgSrc || fallbackSrc}
+        src={currentSrc}
         alt={alt || 'Phone image'}
         onError={handleError}
         style={{
-          objectFit: (props.style?.objectFit as any) || 'cover',
+          objectFit: (props.style?.objectFit as React.CSSProperties['objectFit']) || 'cover',
           width: props.fill ? '100%' : props.width,
           height: props.fill ? '100%' : props.height,
         }}
@@ -89,10 +77,9 @@ export default function SafeImage({
     );
   }
 
-  // Next.js Optimized Image
   return (
     <Image
-      src={imgSrc}
+      src={currentSrc}
       alt={alt || 'Phone image'}
       onError={handleError}
       {...props}

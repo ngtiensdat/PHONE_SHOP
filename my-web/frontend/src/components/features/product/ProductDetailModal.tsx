@@ -2,7 +2,7 @@
  * ProductDetailModal Component
  * Premium modal detailing smartphone specifications, variants, and allowing adding to cart.
  *
- * Related: src/components/base/SafeImage.tsx, src/hooks/useCart.ts, src/data/mock-products.ts
+ * Related: src/components/base/SafeImage.tsx, src/hooks/useCart.ts, src/types/product.ts, src/constants/labels.ts
  * Pattern: Interactive Modal facade
  */
 
@@ -12,8 +12,9 @@ import React, { useState, useEffect } from 'react';
 import { X, Star, Zap, GitCompare, Heart, Gift, ShoppingCart } from 'lucide-react';
 import SafeImage from '@/components/base/SafeImage';
 import { formatVND } from '@/utils/format';
-import { MockProduct } from '@/data/mock-products';
+import { MockProduct, ProductVariant } from '@/types/product';
 import { useCart } from '@/hooks/useCart';
+import { LABELS } from '@/constants/labels';
 
 interface ProductDetailModalProps {
   product: MockProduct;
@@ -24,11 +25,13 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
   const { addToCart } = useCart();
   
   // Default to first variant
-  const [selectedVariant, setSelectedVariant] = useState(product.variants[0] || {
-    storage: 'Mặc định',
-    price: product.price,
-    oldPrice: product.price * 1.1
-  });
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(
+    product.variants[0] || {
+      storage: LABELS.PRODUCT.DEFAULT_VARIANT,
+      price: product.price,
+      oldPrice: product.price * 1.1
+    }
+  );
 
   const [isLiked, setIsLiked] = useState(false);
   const [isCompared, setIsCompared] = useState(false);
@@ -46,27 +49,33 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
     ((selectedVariant.oldPrice - selectedVariant.price) / selectedVariant.oldPrice) * 100
   );
 
-  const handleAddToCart = (buyNow = false) => {
+  const handleAddToCart = () => {
+    const variantIndex = product.variants.findIndex(
+      (v) => v.storage === selectedVariant.storage
+    );
+    const finalVariantIndex = variantIndex !== -1 ? variantIndex : 0;
+
     addToCart({
-      variantId: product.id * 10 + (product.variants.indexOf(selectedVariant as any) !== -1 ? product.variants.indexOf(selectedVariant as any) : 0),
+      variantId: product.id * 10 + finalVariantIndex,
       productId: product.id,
       productName: product.name,
-      color: 'Mặc định',
+      color: LABELS.PRODUCT.DEFAULT_VARIANT,
       storage: selectedVariant.storage,
       imageUrl: product.image,
       price: selectedVariant.price,
       quantity: 1,
     });
+    
     onClose();
   };
 
   return (
     <div className="product-detail-modal-overlay" onClick={onClose}>
       <div 
-        className="product-detail-modal-container" 
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
+         className="product-detail-modal-container" 
+         onClick={(e) => e.stopPropagation()}
+         role="dialog"
+         aria-modal="true"
       >
         {/* Close Button */}
         <button 
@@ -90,11 +99,11 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
               />
               <div className="modal-badges-overlay">
                 {product.installment && (
-                  <span className="badge-installment">Trả góp 0%</span>
+                  <span className="badge-installment">{LABELS.PRODUCT.INSTALLMENT_BADGE}</span>
                 )}
                 {product.fastDelivery && (
                   <span className="badge-fast-delivery">
-                    <Zap size={10} fill="currentColor" /> Giao 2h
+                    <Zap size={10} fill="currentColor" /> {LABELS.PRODUCT.FAST_DELIVERY_BADGE}
                   </span>
                 )}
               </div>
@@ -111,10 +120,10 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
                 <Star size={14} fill="#ff9f0a" color="#ff9f0a" />
                 <span className="modal-rating-num">{product.rating.toFixed(1)}</span>
                 <span className="modal-review-count">
-                  ({product.reviewCount} đánh giá)
+                  ({product.reviewCount} {LABELS.PRODUCT.REVIEWS})
                 </span>
               </div>
-              <span className="modal-sold-count">Đã bán {product.soldCount}</span>
+              <span className="modal-sold-count">{LABELS.PRODUCT.SOLD} {product.soldCount}</span>
             </div>
 
             <hr className="modal-divider" />
@@ -139,7 +148,7 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
             {/* Variants selection */}
             {product.variants && product.variants.length > 0 && (
               <div className="modal-variants-section">
-                <h4 className="section-subtitle">Chọn phiên bản dung lượng:</h4>
+                <h4 className="section-subtitle">{LABELS.PRODUCT.CHOOSE_STORAGE}</h4>
                 <div className="modal-variants-list">
                   {product.variants.map((v) => (
                     <button
@@ -158,19 +167,19 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
 
             {/* Specs Table */}
             <div className="modal-specs-section">
-              <h4 className="section-subtitle">Thông số kỹ thuật:</h4>
+              <h4 className="section-subtitle">{LABELS.PRODUCT.SPEC_TITLE}</h4>
               <div className="modal-specs-table">
                 <div className="specs-row">
-                  <span className="specs-label">Màn hình</span>
+                  <span className="specs-label">{LABELS.PRODUCT.SPEC_SCREEN}</span>
                   <span className="specs-val">{product.specs.screen}</span>
                 </div>
                 <div className="specs-row">
-                  <span className="specs-label">Vi xử lý (Chip)</span>
+                  <span className="specs-label">{LABELS.PRODUCT.SPEC_CHIP}</span>
                   <span className="specs-val">{product.specs.chip}</span>
                 </div>
                 <div className="specs-row">
-                  <span className="specs-label">Bộ nhớ RAM</span>
-                  <span className="specs-val">{product.specs.ram} RAM</span>
+                  <span className="specs-label">{LABELS.PRODUCT.SPEC_RAM}</span>
+                  <span className="specs-val">{product.specs.ram}</span>
                 </div>
               </div>
             </div>
@@ -180,7 +189,7 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
               <div className="modal-promo-box">
                 <Gift size={14} className="modal-promo-icon" />
                 <div className="modal-promo-info">
-                  <span className="modal-promo-header">Khuyến mãi kèm theo:</span>
+                  <span className="modal-promo-header">{LABELS.PRODUCT.PROMOTION_TITLE}</span>
                   <p className="modal-promo-text">{product.promotionText}</p>
                 </div>
               </div>
@@ -191,25 +200,25 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
               <button
                 type="button"
                 className="btn btn-secondary flex-1 flex-center gap-6"
-                onClick={() => handleAddToCart(false)}
+                onClick={() => handleAddToCart()}
               >
                 <ShoppingCart size={16} />
-                <span>Thêm vào giỏ</span>
+                <span>{LABELS.COMMON.ADD_TO_CART}</span>
               </button>
 
               <button
                 type="button"
                 className="btn btn-primary flex-1"
-                onClick={() => handleAddToCart(true)}
+                onClick={() => handleAddToCart()}
               >
-                Mua Ngay
+                {LABELS.COMMON.BUY_NOW}
               </button>
 
               <button
                 type="button"
                 className={`modal-action-icon-btn ${isCompared ? 'active' : ''}`}
                 onClick={() => setIsCompared(!isCompared)}
-                title="So sánh cấu hình"
+                title={LABELS.PRODUCT.COMPARE_TOOLTIP}
               >
                 <GitCompare size={18} />
               </button>
@@ -218,7 +227,7 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
                 type="button"
                 className={`modal-action-icon-btn ${isLiked ? 'liked' : ''}`}
                 onClick={() => setIsLiked(!isLiked)}
-                title="Thêm vào yêu thích"
+                title={LABELS.PRODUCT.FAVORITE_TOOLTIP}
               >
                 <Heart size={18} fill={isLiked ? 'currentColor' : 'none'} />
               </button>
@@ -230,3 +239,4 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
     </div>
   );
 }
+

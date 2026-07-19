@@ -5,39 +5,7 @@
  * Related: src/app/page.tsx, src/components/features/product/ProductCard.tsx
  */
 
-export interface ProductVariant {
-  storage: string;
-  price: number;
-  oldPrice: number;
-}
-
-export interface ProductSpecs {
-  screen: string;
-  chip: string;
-  ram: string;
-}
-
-export interface MockProduct {
-  id: number;
-  name: string;
-  slug: string;
-  description: string;
-  price: number;
-  badge: string;
-  badgeType: 'success' | 'warning' | 'danger' | 'info';
-  image: string;
-  brand: string;
-  category: string;
-  tags: string[];
-  rating: number;
-  reviewCount: number;
-  soldCount: string;
-  promotionText: string;
-  installment: boolean;
-  fastDelivery: boolean;
-  specs: ProductSpecs;
-  variants: ProductVariant[];
-}
+import { MockProduct } from '@/types/product';
 
 export const FEATURED_PRODUCTS: MockProduct[] = [
   {
@@ -969,5 +937,37 @@ export const FEATURED_PRODUCTS: MockProduct[] = [
         "oldPrice": 6708800
       }
     ]
+  },
+  {
+    "id": 99999,
+    "name": "Cáp Sạc Siêu Rẻ Sóc 2K (Dành Cho Kiểm Thử QR)",
+    "slug": "cap-sac-sieu-re-soc-2k-kiem-thu-qr",
+    "description": "Phụ kiện cáp sạc USB-C độ dài 0.2m siêu rẻ dùng cho việc kiểm thử tính năng thanh toán QR 2,000 VND trên Sóc Mobile.",
+    "price": 2000,
+    "badge": "Mã QR 2K",
+    "badgeType": "info",
+    "image": "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?q=80&w=200&auto=format&fit=crop",
+    "brand": "Sóc Mobile",
+    "category": "Phụ kiện",
+    "tags": ["featured", "phụ kiện", "test"],
+    "rating": 5.0,
+    "reviewCount": 99,
+    "soldCount": "9.9k",
+    "promotionText": "Sản phẩm đặc biệt dùng để test chuyển khoản ngân hàng qua VietQR 2,000 VND",
+    "installment": false,
+    "fastDelivery": true,
+    "specs": {
+      "screen": "Độ dài 20cm",
+      "chip": "Cổng USB-C",
+      "ram": "Hỗ trợ 5W"
+    },
+    "variants": [
+      {
+        "storage": "Tiêu chuẩn",
+        "price": 2000,
+        "oldPrice": 10000
+      }
+    ]
   }
 ];
+

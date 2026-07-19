@@ -29,8 +29,9 @@ export function useCart() {
   const syncWithBackend = useCallback(async (action: () => Promise<void>) => {
     try {
       await action();
-    } catch (error: any) {
-      toast.error(error.message || 'Không thể đồng bộ giỏ hàng với hệ thống');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn('Backend sync warning:', msg);
     }
   }, []);
 
