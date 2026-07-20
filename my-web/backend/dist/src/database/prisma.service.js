@@ -18,7 +18,13 @@ let PrismaService = class PrismaService extends client_1.PrismaClient {
     pool;
     constructor() {
         const connectionString = process.env.DATABASE_URL;
-        const pool = new pg_1.Pool({ connectionString });
+        const isProduction = process.env.NODE_ENV === 'production';
+        const hasSslMode = connectionString?.includes('sslmode=');
+        const isCloudDb = connectionString?.includes('render.com') || connectionString?.includes('supabase') || connectionString?.includes('neon.tech');
+        const pool = new pg_1.Pool({
+            connectionString,
+            ssl: (isProduction || hasSslMode || isCloudDb) ? { rejectUnauthorized: false } : undefined,
+        });
         const adapter = new adapter_pg_1.PrismaPg(pool);
         super({ adapter });
         this.pool = pool;

@@ -21,7 +21,15 @@ export class PrismaService
 
   constructor() {
     const connectionString = process.env.DATABASE_URL;
-    const pool = new Pool({ connectionString });
+    const isProduction = process.env.NODE_ENV === 'production';
+    const hasSslMode = connectionString?.includes('sslmode=');
+    const isCloudDb = connectionString?.includes('render.com') || connectionString?.includes('supabase') || connectionString?.includes('neon.tech');
+
+    const pool = new Pool({ 
+      connectionString,
+      ssl: (isProduction || hasSslMode || isCloudDb) ? { rejectUnauthorized: false } : undefined,
+    });
+
     const adapter = new PrismaPg(pool);
     super({ adapter });
     this.pool = pool;
