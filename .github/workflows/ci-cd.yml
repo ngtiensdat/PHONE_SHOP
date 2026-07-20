@@ -61,6 +61,7 @@ jobs:
           name: frontend-build
           path: my-web/frontend/.next
           retention-days: 7
+          include-hidden-files: true
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Job 2: Backend - Lint, Build & Test
