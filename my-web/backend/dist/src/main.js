@@ -14,18 +14,22 @@ const response_interceptor_1 = require("./common/interceptors/response.intercept
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const configService = app.get(config_1.ConfigService);
-    const frontendUrl = configService.get('frontendUrl') ?? 'http://localhost:3000';
     const port = configService.get('port') ?? 3001;
-    app.use((0, helmet_1.default)({
-        crossOriginResourcePolicy: { policy: 'cross-origin' },
-    }));
-    app.enableCors({
-        origin: [
+    const frontendUrl = configService.get('frontendUrl') ?? 'http://localhost:3000';
+    const allowedOriginsStr = configService.get('cors.allowedOrigins');
+    const allowedOrigins = allowedOriginsStr
+        ? allowedOriginsStr.split(',').map(url => url.trim())
+        : [
             frontendUrl,
             'http://localhost:3000',
             'http://127.0.0.1:3000',
             'http://[::1]:3000',
-        ],
+        ];
+    app.use((0, helmet_1.default)({
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }));
+    app.enableCors({
+        origin: allowedOrigins,
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],

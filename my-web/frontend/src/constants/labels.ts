@@ -71,6 +71,22 @@ export const LABELS = {
     ERROR_FILL_REQUIRED: 'Vui lòng điền đầy đủ các thông tin bắt buộc',
     ERROR_PASSWORD_MISMATCH: 'Mật khẩu nhập lại không trùng khớp',
     ERROR_PASSWORD_LENGTH: 'Mật khẩu phải chứa ít nhất 6 ký tự',
+    
+    // Placeholders
+    EMAIL_PLACEHOLDER: 'ten@example.com',
+    PASSWORD_PLACEHOLDER: '••••••••',
+    FULL_NAME_PLACEHOLDER: 'Nguyễn Văn A',
+    PHONE_PLACEHOLDER: '0987654321',
+    PASSWORD_MIN_PLACEHOLDER: 'Tối thiểu 6 ký tự',
+
+    // Hero Features Split Screen
+    HERO_FEATURE_1_TITLE: 'Chuỗi Cửa Hàng Sóc Mobile',
+    HERO_FEATURE_1_DESC: 'Hệ thống phân phối điện thoại chính hãng hàng đầu Việt Nam. Hỗ trợ kỹ thuật 24/7 và giao hàng siêu tốc.',
+    HERO_FEATURE_2_TITLE: 'Bảo Mật An Toàn Tuyệt Đối',
+    HERO_FEATURE_2_DESC: 'Tài khoản và thông tin giao dịch của bạn được mã hóa và bảo mật nghiêm ngặt theo tiêu chuẩn quốc tế.',
+    HERO_FEATURE_3_TITLE: 'Ưu Đãi Trả Góp 0%',
+    HERO_FEATURE_3_DESC: 'Mua sắm smartphone mơ ước dễ dàng với chính sách trả góp 0% lãi suất, xét duyệt hồ sơ online cực nhanh.',
+    COPYRIGHT_TEXT: '© 2026 Sóc Mobile. Đã đăng ký bản quyền. Hotline hỗ trợ: ',
   },
   PRODUCT: {
     DEFAULT_VARIANT: 'Mặc định',

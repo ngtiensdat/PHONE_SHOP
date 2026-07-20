@@ -49,4 +49,7 @@ export const appConfig = () => ({
   },
 
   frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+  cors: {
+    allowedOrigins: process.env.ALLOWED_ORIGINS ?? '',
+  },
 });

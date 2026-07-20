@@ -33,4 +33,7 @@ export declare const appConfig: () => {
         from: string;
     };
     frontendUrl: string;
+    cors: {
+        allowedOrigins: string;
+    };
 };

@@ -36,6 +36,9 @@ const appConfig = () => ({
         from: process.env.MAIL_FROM ?? 'noreply@phoneshop.vn',
     },
     frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    cors: {
+        allowedOrigins: process.env.ALLOWED_ORIGINS ?? '',
+    },
 });
 exports.appConfig = appConfig;
 //# sourceMappingURL=app.config.js.map

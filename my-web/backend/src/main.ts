@@ -18,9 +18,19 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
+  const port = configService.get<number>('port') ?? 3001;
   const frontendUrl =
     configService.get<string>('frontendUrl') ?? 'http://localhost:3000';
-  const port = configService.get<number>('port') ?? 3001;
+
+  const allowedOriginsStr = configService.get<string>('cors.allowedOrigins');
+  const allowedOrigins = allowedOriginsStr
+    ? allowedOriginsStr.split(',').map(url => url.trim())
+    : [
+        frontendUrl,
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://[::1]:3000',
+      ];
 
   // Security
   app.use(
@@ -31,12 +41,7 @@ async function bootstrap(): Promise<void> {
 
   // CORS
   app.enableCors({
-    origin: [
-      frontendUrl,
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'http://[::1]:3000',
-    ],
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
