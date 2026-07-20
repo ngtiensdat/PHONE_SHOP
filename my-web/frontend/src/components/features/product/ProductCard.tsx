@@ -48,8 +48,6 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
 
   return (
     <article className="product-card card-container spec-product-card">
-      <div className="accent-bar" />
-
       {/* Top action badges */}
       <div className="product-card-top-meta">
         {product.installment && (
@@ -88,6 +86,32 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
             {product.badge}
           </span>
         )}
+
+        {/* Floating actions overlay (Top Right) */}
+        <div className="product-card-actions-overlay">
+          <button
+            type="button"
+            className={`floating-action-btn compare-btn ${isCompared ? 'active' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              addCompare(product);
+            }}
+            title={LABELS.PRODUCT.COMPARE_TOOLTIP}
+          >
+            <GitCompare size={14} />
+          </button>
+          <button
+            type="button"
+            className={`floating-action-btn fav-btn ${isLiked ? 'liked' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsLiked(!isLiked);
+            }}
+            title={LABELS.PRODUCT.FAVORITE_TOOLTIP}
+          >
+            <Heart size={14} fill={isLiked ? 'currentColor' : 'none'} />
+          </button>
+        </div>
       </div>
 
       {/* Interactive Storage Variants Selector */}
@@ -170,25 +194,6 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
 
         {/* Quick Action Footer */}
         <div className="product-card-action-bar">
-          <button
-            type="button"
-            className={`action-btn compare-btn ${isCompared ? 'active' : ''}`}
-            onClick={() => addCompare(product)}
-            title={LABELS.PRODUCT.COMPARE_TOOLTIP}
-          >
-            <GitCompare size={16} />
-            <span>{isCompared ? LABELS.PRODUCT.COMPARE_STATUS_ACTIVE : LABELS.PRODUCT.COMPARE_STATUS_INACTIVE}</span>
-          </button>
-
-          <button
-            type="button"
-            className={`action-icon-btn fav-btn ${isLiked ? 'liked' : ''}`}
-            onClick={() => setIsLiked(!isLiked)}
-            title={LABELS.PRODUCT.FAVORITE_TOOLTIP}
-          >
-            <Heart size={16} fill={isLiked ? 'currentColor' : 'none'} />
-          </button>
-
           {onViewDetail ? (
             <button type="button" onClick={onViewDetail} className="btn btn-primary btn-sm btn-buy-now">
               {LABELS.COMMON.BUY_NOW}

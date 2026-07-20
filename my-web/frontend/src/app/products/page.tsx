@@ -253,7 +253,7 @@ function ProductsContent() {
           {/* Product Grid Feed */}
           {filteredProducts.length > 0 ? (
             <>
-              <div id="product-list-top" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(215px, 1fr))', gap: '20px', width: '100%', maxWidth: '100%' }}>
+              <div id="product-list-top" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px', width: '100%', maxWidth: '100%' }}>
                 {paginatedProducts.map((product) => (
                   <ProductCard 
                     key={product.id} 
