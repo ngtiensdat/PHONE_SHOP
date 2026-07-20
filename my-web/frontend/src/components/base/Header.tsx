@@ -3,14 +3,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  ShoppingBag, 
-  Search, 
-  MapPin, 
-  Phone, 
-  FileText, 
-  User, 
-  ChevronDown, 
+import {
+  ShoppingBag,
+  Search,
+  MapPin,
+  Phone,
+  FileText,
+  User,
+  ChevronDown,
   X,
   Smartphone,
   CreditCard,
@@ -42,7 +42,7 @@ export default function Header() {
   const router = useRouter();
   const { totalItems } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState('Hồ Chí Minh');
@@ -96,7 +96,7 @@ export default function Header() {
   useEffect(() => {
     const savedLoc = localStorage.getItem('user-location');
     const savedStore = localStorage.getItem('user-nearest-store');
-    
+
     if (savedLoc && savedStore) {
       setSelectedLocation(savedLoc);
       setNearestStore(savedStore);
@@ -153,12 +153,12 @@ export default function Header() {
       {/* Top Main Bar */}
       <div className="header-main-bar">
         <div className="header-container">
-          
+
           {/* Logo */}
           <Link href={APP_CONFIG.ROUTES.HOME} className="header-logo">
-            <img 
-              src="/remove_background_logo_phone_shop.png" 
-              alt="Sóc Mobile Logo" 
+            <img
+              src="/remove_background_logo_phone_shop.png"
+              alt="Sóc Mobile Logo"
               className="logo-img"
             />
             <span className="logo-text">
@@ -168,9 +168,9 @@ export default function Header() {
 
           {/* Location Selector with GPS & Nearest Store */}
           <div className="location-selector-wrapper" ref={locationRef}>
-            <button 
-              type="button" 
-              className="header-location-btn" 
+            <button
+              type="button"
+              className="header-location-btn"
               onClick={() => setShowLocationDropdown(!showLocationDropdown)}
               title={`Cửa hàng gần nhất: ${nearestStore}`}
             >
@@ -181,7 +181,7 @@ export default function Header() {
               </div>
               <ChevronDown size={12} className="chevron-icon" />
             </button>
-            
+
             {showLocationDropdown && (
               <div className="location-dropdown-menu">
                 {/* Auto GPS Trigger Button */}
@@ -211,9 +211,9 @@ export default function Header() {
                 </div>
 
                 {CITY_COORDINATES.map(city => (
-                  <button 
+                  <button
                     key={city.name}
-                    type="button" 
+                    type="button"
                     className={selectedLocation === city.name ? 'active' : ''}
                     onClick={() => handleSelectLocationManually(city.name)}
                   >
@@ -230,16 +230,16 @@ export default function Header() {
             <form onSubmit={handleSearchSubmit} className="header-search-form">
               <input
                 type="text"
-                placeholder="Bạn cần tìm điện thoại gì?..."
+                placeholder="Tìm kiếm..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setShowSuggestions(true)}
                 className="header-search-input"
               />
               {searchQuery && (
-                <button 
-                  type="button" 
-                  className="search-clear-btn" 
+                <button
+                  type="button"
+                  className="search-clear-btn"
                   onClick={() => setSearchQuery('')}
                 >
                   <X size={14} />
@@ -268,12 +268,12 @@ export default function Header() {
                     ))}
                   </div>
                 </div>
-                
+
                 {searchQuery && (
                   <div className="suggestion-section suggestion-predictive">
                     <span className="suggestion-title">Gợi ý tìm kiếm cho &quot;{searchQuery}&quot;</span>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="predictive-item"
                       onClick={() => handleSuggestionClick(searchQuery)}
                     >
@@ -314,9 +314,9 @@ export default function Header() {
           <div className="header-user-account" ref={userRef}>
             {isAuthenticated && user ? (
               <>
-                <button 
-                  type="button" 
-                  className="user-profile-trigger" 
+                <button
+                  type="button"
+                  className="user-profile-trigger"
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
                 >
                   <div className="avatar-placeholder">
@@ -325,7 +325,7 @@ export default function Header() {
                   <span className="user-name-text">{user.fullName || 'Tài khoản'}</span>
                   <ChevronDown size={14} />
                 </button>
-                
+
                 {showUserDropdown && (
                   <div className="user-dropdown-menu">
                     <div className="dropdown-user-info">
