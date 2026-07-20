@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { LABELS } from '@/constants/labels';
 import { APP_CONFIG } from '@/constants/config';
 import { loginSchema } from '@/schemas/auth.schema';
-import { Mail, Lock, ArrowLeft, Loader2 } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
 import SafeImage from '@/components/base/SafeImage';
 
 export default function LoginPage() {
@@ -23,24 +23,34 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
-      setError(result.error.issues[0].message);
+      const fieldErrors: { [key: string]: string } = {};
+      result.error.issues.forEach((issue) => {
+        const path = issue.path[0];
+        if (path !== undefined) {
+          fieldErrors[String(path)] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
       return;
     }
     
-    setError(null);
+    setErrors({});
     setIsLoading(true);
 
     try {
       await login(result.data);
-    } catch {
+    } catch (err: any) {
       setIsLoading(false);
+      const message = err?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản và mật khẩu.';
+      setErrors({ global: message });
     }
   };
 
@@ -114,9 +124,9 @@ export default function LoginPage() {
           </div>
 
           {/* Local Error alert if any */}
-          {error && (
+          {errors.global && (
             <div style={{ color: 'var(--color-danger)', fontSize: '13px', textAlign: 'center', backgroundColor: 'rgba(255,59,48,0.08)', padding: '10px', borderRadius: 'var(--radius-lg)' }}>
-              {error}
+              {errors.global}
             </div>
           )}
 
@@ -133,11 +143,11 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
-                  required
-                  className="auth-input"
+                  className={`auth-input ${errors.email ? 'has-error' : ''}`}
                 />
                 <Mail className="auth-input-icon" size={18} />
               </div>
+              {errors.email && <span className="auth-field-error">{errors.email}</span>}
             </div>
 
             {/* Password */}
@@ -146,16 +156,25 @@ export default function LoginPage() {
               <div className="auth-input-wrapper">
                 <input
                   id="password-input"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder={LABELS.AUTH.PASSWORD_PLACEHOLDER}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
-                  required
-                  className="auth-input"
+                  className={`auth-input ${errors.password ? 'has-error' : ''}`}
+                  style={{ paddingRight: '44px' }}
                 />
                 <Lock className="auth-input-icon" size={18} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="auth-password-toggle"
+                  title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
+              {errors.password && <span className="auth-field-error">{errors.password}</span>}
             </div>
 
             {/* Submit Button */}

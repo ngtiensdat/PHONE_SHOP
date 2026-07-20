@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { LABELS } from '@/constants/labels';
 import { APP_CONFIG } from '@/constants/config';
 import { registerSchema } from '@/schemas/auth.schema';
-import { Mail, Lock, User, Phone, ArrowLeft, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, Phone, ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
 import SafeImage from '@/components/base/SafeImage';
 
 export default function RegisterPage() {
@@ -27,7 +27,9 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +43,18 @@ export default function RegisterPage() {
     });
 
     if (!result.success) {
-      setError(result.error.issues[0].message);
+      const fieldErrors: { [key: string]: string } = {};
+      result.error.issues.forEach((issue) => {
+        const path = issue.path[0];
+        if (path !== undefined) {
+          fieldErrors[String(path)] = issue.message;
+        }
+      });
+      setErrors(fieldErrors);
       return;
     }
 
-    setError(null);
+    setErrors({});
     setIsLoading(true);
 
     try {
@@ -55,8 +64,10 @@ export default function RegisterPage() {
         phone: result.data.phone || undefined,
         password: result.data.password,
       });
-    } catch {
+    } catch (err: any) {
       setIsLoading(false);
+      const message = err?.response?.data?.message || 'Đăng ký thất bại. Email có thể đã được đăng ký bởi tài khoản khác.';
+      setErrors({ global: message });
     }
   };
 
@@ -130,9 +141,9 @@ export default function RegisterPage() {
           </div>
 
           {/* Error info */}
-          {error && (
+          {errors.global && (
             <div style={{ color: 'var(--color-danger)', fontSize: '13px', textAlign: 'center', backgroundColor: 'rgba(255,59,48,0.08)', padding: '10px', borderRadius: 'var(--radius-lg)' }}>
-              {error}
+              {errors.global}
             </div>
           )}
 
@@ -149,12 +160,12 @@ export default function RegisterPage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   disabled={isLoading}
-                  required
-                  className="auth-input"
+                  className={`auth-input ${errors.fullName ? 'has-error' : ''}`}
                   style={{ height: '44px' }}
                 />
                 <User className="auth-input-icon" size={18} />
               </div>
+              {errors.fullName && <span className="auth-field-error">{errors.fullName}</span>}
             </div>
 
             {/* Email */}
@@ -168,12 +179,12 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
-                  required
-                  className="auth-input"
+                  className={`auth-input ${errors.email ? 'has-error' : ''}`}
                   style={{ height: '44px' }}
                 />
                 <Mail className="auth-input-icon" size={18} />
               </div>
+              {errors.email && <span className="auth-field-error">{errors.email}</span>}
             </div>
 
             {/* Phone */}
@@ -187,11 +198,12 @@ export default function RegisterPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   disabled={isLoading}
-                  className="auth-input"
+                  className={`auth-input ${errors.phone ? 'has-error' : ''}`}
                   style={{ height: '44px' }}
                 />
                 <Phone className="auth-input-icon" size={18} />
               </div>
+              {errors.phone && <span className="auth-field-error">{errors.phone}</span>}
             </div>
 
             {/* Password */}
@@ -200,17 +212,25 @@ export default function RegisterPage() {
               <div className="auth-input-wrapper">
                 <input
                   id="password-input"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder={LABELS.AUTH.PASSWORD_MIN_PLACEHOLDER}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
-                  required
-                  className="auth-input"
-                  style={{ height: '44px' }}
+                  className={`auth-input ${errors.password ? 'has-error' : ''}`}
+                  style={{ height: '44px', paddingRight: '44px' }}
                 />
                 <Lock className="auth-input-icon" size={18} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="auth-password-toggle"
+                  title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
+              {errors.password && <span className="auth-field-error">{errors.password}</span>}
             </div>
 
             {/* Confirm Password */}
@@ -219,17 +239,25 @@ export default function RegisterPage() {
               <div className="auth-input-wrapper">
                 <input
                   id="confirmPassword-input"
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   placeholder={LABELS.AUTH.PASSWORD_PLACEHOLDER}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={isLoading}
-                  required
-                  className="auth-input"
-                  style={{ height: '44px' }}
+                  className={`auth-input ${errors.confirmPassword ? 'has-error' : ''}`}
+                  style={{ height: '44px', paddingRight: '44px' }}
                 />
                 <Lock className="auth-input-icon" size={18} />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="auth-password-toggle"
+                  title={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
+              {errors.confirmPassword && <span className="auth-field-error">{errors.confirmPassword}</span>}
             </div>
 
             {/* Submit */}

@@ -2651,6 +2651,14 @@ a:hover {
   transition: all 0.2s ease;
 }
 
+.auth-input.has-error {
+  border-color: var(--color-danger) !important;
+}
+
+.auth-input.has-error:focus {
+  box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.15) !important;
+}
+
 .auth-input:focus {
   border-color: var(--color-primary);
   background-color: var(--bg-primary);
@@ -2659,6 +2667,47 @@ a:hover {
 
 .auth-input:focus+.auth-input-icon {
   color: var(--color-primary);
+}
+
+/* Password Toggle and Field Errors */
+.auth-password-toggle {
+  position: absolute;
+  right: 14px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 10;
+  transition: var(--transition-fast);
+}
+
+.auth-password-toggle:hover {
+  color: var(--color-primary);
+}
+
+.auth-field-error {
+  color: var(--color-danger);
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+  margin-left: 4px;
+  display: block;
+  animation: fadeInError 0.2s ease;
+}
+
+@keyframes fadeInError {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .auth-btn {

@@ -71,9 +71,9 @@ export const LABELS = {
     ERROR_FILL_REQUIRED: 'Vui lòng điền đầy đủ các thông tin bắt buộc',
     ERROR_PASSWORD_MISMATCH: 'Mật khẩu nhập lại không trùng khớp',
     ERROR_PASSWORD_LENGTH: 'Mật khẩu phải chứa ít nhất 6 ký tự',
-    
+
     // Placeholders
-    EMAIL_PLACEHOLDER: 'ten@example.com',
+    EMAIL_PLACEHOLDER: 'ten@gmail.com',
     PASSWORD_PLACEHOLDER: '••••••••',
     FULL_NAME_PLACEHOLDER: 'Nguyễn Văn A',
     PHONE_PLACEHOLDER: '0987654321',

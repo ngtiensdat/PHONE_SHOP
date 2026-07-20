@@ -64,20 +64,20 @@ export default function LienHePage() {
                 <div className="info-form-row">
                   <div className="info-form-group">
                     <label>Họ và tên *</label>
-                    <input required type="text" className="checkout-input" placeholder="Nguyễn Văn A" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
+                    <input required type="text" className="checkout-input" placeholder="Nguyễn Văn A" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
                   </div>
                   <div className="info-form-group">
                     <label>Số điện thoại *</label>
-                    <input required type="tel" className="checkout-input" placeholder="0909 xxx xxx" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
+                    <input required type="tel" className="checkout-input" placeholder="0909 xxx xxx" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
                   </div>
                 </div>
                 <div className="info-form-group">
                   <label>Địa chỉ email</label>
-                  <input type="email" className="checkout-input" placeholder="email@example.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
+                  <input type="email" className="checkout-input" placeholder="email@gmail.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
                 </div>
                 <div className="info-form-group">
                   <label>Chủ đề *</label>
-                  <select required className="checkout-select" value={form.subject} onChange={e => setForm({...form, subject: e.target.value})}>
+                  <select required className="checkout-select" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}>
                     <option value="">-- Chọn chủ đề --</option>
                     <option>Tư vấn mua hàng</option>
                     <option>Khiếu nại sản phẩm / dịch vụ</option>
@@ -89,7 +89,7 @@ export default function LienHePage() {
                 </div>
                 <div className="info-form-group">
                   <label>Nội dung *</label>
-                  <textarea required className="checkout-input" rows={5} placeholder="Mô tả chi tiết vấn đề bạn cần hỗ trợ..." value={form.message} onChange={e => setForm({...form, message: e.target.value})} style={{ resize: 'vertical' }} />
+                  <textarea required className="checkout-input" rows={5} placeholder="Mô tả chi tiết vấn đề bạn cần hỗ trợ..." value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} style={{ resize: 'vertical' }} />
                 </div>
                 <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '14px', borderRadius: '12px', fontSize: '15px', fontWeight: 700 }}>
                   📨 Gửi yêu cầu hỗ trợ
