@@ -9,7 +9,7 @@
 export interface ProductVariant {
   storage: string;
   price: number;
-  oldPrice: number;
+  oldPrice?: number;
 }
 
 export interface ProductSpecs {

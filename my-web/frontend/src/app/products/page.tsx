@@ -28,13 +28,15 @@ import Footer from '@/components/base/Footer';
 import ProductCard from '@/components/features/product/ProductCard';
 import ProductDetailModal from '@/components/features/product/ProductDetailModal';
 import CompareFloatingBar from '@/components/features/product/CompareFloatingBar';
+import Pagination from '@/components/base/Pagination';
 import { FEATURED_PRODUCTS } from '@/data/mock-products';
 import { MockProduct } from '@/types/product';
 
 // Extract only phone products for this dedicated phone catalog
 const ALL_PHONES = FEATURED_PRODUCTS.filter(p => p.category === 'Điện thoại');
 
-const BRANDS = ['Tất cả', 'Apple', 'Samsung', 'Xiaomi', 'OPPO', 'vivo', 'Realme'];
+const BRANDS = ['Tất cả', ...Array.from(new Set(ALL_PHONES.map(p => p.brand))).filter(Boolean)];
+const ITEMS_PER_PAGE = 12;
 
 const PRICE_RANGES = [
   { label: 'Tất cả mức giá', min: 0, max: Infinity },
@@ -59,6 +61,7 @@ function ProductsContent() {
   const [selectedPriceRange, setSelectedPriceRange] = useState(0); // index 0: Tất cả
   const [sortBy, setSortBy] = useState('featured');
   const [userQuery, setUserQuery] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState<MockProduct | null>(null);
 
   const searchQuery = userQuery !== null ? userQuery : searchFromUrl;
@@ -95,11 +98,24 @@ function ProductsContent() {
     });
   }, [selectedBrand, selectedPriceRange, sortBy, searchQuery]);
 
+  // Reset to page 1 whenever any filter changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedBrand, selectedPriceRange, sortBy, searchQuery]);
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
   const handleResetFilters = () => {
     setSelectedBrand('Tất cả');
     setSelectedPriceRange(0);
     setSortBy('featured');
     setUserQuery('');
+    setCurrentPage(1);
   };
 
   return (
@@ -131,11 +147,11 @@ function ProductsContent() {
           <div style={{ background: 'var(--bg-primary)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', marginBottom: '24px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
             
             {/* Brand Chips */}
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '16px', maxWidth: '100%' }}>
               <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
                 Hãng sản xuất:
               </span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', maxWidth: '100%', overflowX: 'auto', paddingBottom: '4px' }}>
                 {BRANDS.map(brand => (
                   <button
                     key={brand}
@@ -151,6 +167,7 @@ function ProductsContent() {
                       background: selectedBrand === brand ? '#6d28d9' : 'var(--bg-secondary)',
                       color: selectedBrand === brand ? '#ffffff' : 'var(--text-primary)',
                       cursor: 'pointer',
+                      whiteSpace: 'nowrap',
                       transition: 'all 0.15s ease'
                     }}
                   >
@@ -235,15 +252,26 @@ function ProductsContent() {
 
           {/* Product Grid Feed */}
           {filteredProducts.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
-              {filteredProducts.map((product) => (
-                <ProductCard 
-                  key={product.id} 
-                  product={product} 
-                  onViewDetail={() => setSelectedProduct(product)}
-                />
-              ))}
-            </div>
+            <>
+              <div id="product-list-top" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(215px, 1fr))', gap: '20px', width: '100%', maxWidth: '100%' }}>
+                {paginatedProducts.map((product) => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    onViewDetail={() => setSelectedProduct(product)}
+                  />
+                ))}
+              </div>
+
+              {/* Reusable Pagination Component */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                totalItems={filteredProducts.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+              />
+            </>
           ) : (
             <div style={{ background: 'var(--bg-primary)', borderRadius: '16px', padding: '48px 24px', textAlign: 'center', border: '1px solid var(--border-color)', margin: '24px 0' }}>
               <ShieldAlert size={48} style={{ color: 'var(--text-muted)', marginBottom: '12px' }} />

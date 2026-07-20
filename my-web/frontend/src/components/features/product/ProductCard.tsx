@@ -11,11 +11,12 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Star, Zap, GitCompare, Heart, Gift } from 'lucide-react';
+import { Star, Zap, GitCompare, Heart, Gift, HelpCircle } from 'lucide-react';
 import SafeImage from '@/components/base/SafeImage';
 import { formatVND } from '@/utils/format';
 import { MockProduct, ProductVariant } from '@/types/product';
 import { LABELS } from '@/constants/labels';
+import { APP_CONFIG } from '@/constants/config';
 import { useCompareStore } from '@/store/useCompareStore';
 import { useIsMounted } from '@/hooks/useIsMounted';
 
@@ -39,9 +40,11 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
   const addCompare = useCompareStore((state) => state.addProduct);
   const isCompared = isMounted && comparedProducts.some((p) => p.id === product.id);
 
-  const discountPercent = Math.round(
-    ((selectedVariant.oldPrice - selectedVariant.price) / selectedVariant.oldPrice) * 100
-  );
+  const discountPercent = selectedVariant.oldPrice && selectedVariant.oldPrice > selectedVariant.price
+    ? Math.round(((selectedVariant.oldPrice - selectedVariant.price) / selectedVariant.oldPrice) * 100)
+    : 0;
+
+  const hasSpecs = Boolean(product.specs?.screen || product.specs?.chip || product.specs?.ram);
 
   return (
     <article className="product-card card-container spec-product-card">
@@ -120,17 +123,28 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
 
         {/* Tech Specs Summary */}
         <div className="product-mini-specs">
-          <span>{product.specs.screen}</span>
-          <span>{product.specs.chip}</span>
-          <span>{product.specs.ram}</span>
+          {hasSpecs ? (
+            <>
+              {product.specs.screen && <span>{product.specs.screen}</span>}
+              {product.specs.chip && <span>{product.specs.chip}</span>}
+              {product.specs.ram && <span>{product.specs.ram}</span>}
+            </>
+          ) : (
+            <span 
+              title={`Thông số kỹ thuật chi tiết đang được cập nhật từ nhà sản xuất. Gọi ${APP_CONFIG.HOTLINE} để được tư vấn trực tiếp.`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'help', color: '#6d28d9', fontStyle: 'italic', fontSize: '11px' }}
+            >
+              <HelpCircle size={12} /> Đang cập nhật thông số
+            </span>
+          )}
         </div>
 
         {/* Price Row */}
         <div className="product-price-section">
           <span className="product-card-price">{formatVND(selectedVariant.price)}</span>
-          {selectedVariant.oldPrice > selectedVariant.price && (
+          {Boolean(selectedVariant.oldPrice && selectedVariant.oldPrice > selectedVariant.price) && (
             <>
-              <span className="product-card-old-price">{formatVND(selectedVariant.oldPrice)}</span>
+              <span className="product-card-old-price">{formatVND(selectedVariant.oldPrice!)}</span>
               <span className="product-card-discount-tag">-{discountPercent}%</span>
             </>
           )}

@@ -19,6 +19,8 @@ import {
   Store,
   Grid,
   Navigation,
+  RefreshCw,
+  LogOut,
   Loader2
 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
@@ -285,16 +287,16 @@ export default function Header() {
           </div>
 
           {/* Contact Hotline */}
-          <a href="tel:18002097" className="header-hotline">
+          <a href={`tel:${APP_CONFIG.HOTLINE_TEL}`} className="header-hotline">
             <Phone size={15} className="hotline-icon" />
             <div className="hotline-info">
               <span className="hotline-label">Gọi mua hàng</span>
-              <span className="hotline-number">1800.2097</span>
+              <span className="hotline-number">{APP_CONFIG.HOTLINE}</span>
             </div>
           </a>
 
           {/* Track Orders */}
-          <Link href="/orders/track" className="header-track-btn">
+          <Link href="/orders" className="header-track-btn">
             <FileText size={16} />
             <span>Tra cứu đơn hàng</span>
           </Link>
@@ -318,45 +320,30 @@ export default function Header() {
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
                 >
                   <div className="avatar-placeholder">
-                    {user.fullName ? user.fullName[0].toUpperCase() : user.email[0].toUpperCase()}
+                    {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
                   </div>
-                  <span className="username-text">{user.fullName || 'Tài khoản'}</span>
-                  <ChevronDown size={12} />
+                  <span className="user-name-text">{user.fullName || 'Tài khoản'}</span>
+                  <ChevronDown size={14} />
                 </button>
                 
                 {showUserDropdown && (
-                  <ul className="user-dropdown-menu">
-                    <li>
-                      <Link href="/dashboard" onClick={() => setShowUserDropdown(false)}>
-                        Trang cá nhân
-                      </Link>
-                    </li>
-                    {user.role === 'ADMIN' && (
-                      <li>
-                        <Link href="/admin" onClick={() => setShowUserDropdown(false)}>
-                          Quản trị hệ thống
-                        </Link>
-                      </li>
-                    )}
-                    <li>
-                      <Link href="/orders" onClick={() => setShowUserDropdown(false)}>
-                        Lịch sử mua hàng
-                      </Link>
-                    </li>
-                    <li className="dropdown-divider"></li>
-                    <li>
-                      <button 
-                        type="button" 
-                        onClick={() => {
-                          void logout();
-                          setShowUserDropdown(false);
-                        }}
-                        className="logout-action-btn"
-                      >
-                        Đăng xuất
-                      </button>
-                    </li>
-                  </ul>
+                  <div className="user-dropdown-menu">
+                    <div className="dropdown-user-info">
+                      <span className="dropdown-user-name">{user.fullName}</span>
+                      <span className="dropdown-user-email">{user.email}</span>
+                    </div>
+                    <div className="dropdown-divider" />
+                    <Link href="/orders" className="dropdown-item" onClick={() => setShowUserDropdown(false)}>
+                      <FileText size={15} /> <span>Đơn hàng của tôi</span>
+                    </Link>
+                    <Link href="/bao-hanh" className="dropdown-item" onClick={() => setShowUserDropdown(false)}>
+                      <ShieldCheck size={15} /> <span>Tra cứu bảo hành IMEI</span>
+                    </Link>
+                    <div className="dropdown-divider" />
+                    <button type="button" className="dropdown-item logout-btn" onClick={() => { logout(); setShowUserDropdown(false); }}>
+                      <LogOut size={15} /> <span>Đăng xuất</span>
+                    </button>
+                  </div>
                 )}
               </>
             ) : (
@@ -376,20 +363,20 @@ export default function Header() {
           <Link href="/products" className="subnav-link">
             <Smartphone size={15} /> <span>Điện thoại</span>
           </Link>
-          <Link href="/tra-gop" className="subnav-link highlight">
+          <Link href="/thu-cu-doi-moi" className="subnav-link highlight" style={{ color: '#f59e0b' }}>
+            <RefreshCw size={15} /> <span>Thu cũ đổi mới</span> <span className="nav-tag" style={{ background: '#f59e0b', color: '#000' }}>HOT</span>
+          </Link>
+          <Link href="/tra-gop" className="subnav-link">
             <CreditCard size={15} /> <span>Trả góp 0%</span>
           </Link>
           <Link href="/compare" className="subnav-link ai-nav">
             <Bot size={15} /> <span>So sánh AI</span> <span className="nav-tag">AI</span>
           </Link>
           <Link href="/bao-hanh" className="subnav-link">
-            <ShieldCheck size={15} /> <span>Bảo hành VIP</span>
+            <ShieldCheck size={15} /> <span>Tra cứu bảo hành</span>
           </Link>
-          <Link href="/dia-chi" className="subnav-link">
-            <Store size={15} /> <span>Cửa hàng (50+)</span>
-          </Link>
-          <Link href="/gioi-thieu" className="subnav-link">
-            <Grid size={15} /> <span>Giới thiệu</span>
+          <Link href="/orders" className="subnav-link">
+            <FileText size={15} /> <span>Tra cứu đơn hàng</span>
           </Link>
         </div>
       </nav>

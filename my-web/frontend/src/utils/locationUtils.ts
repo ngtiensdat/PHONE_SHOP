@@ -24,7 +24,7 @@ export const CITY_COORDINATES: CityLocation[] = [
     name: 'Hà Nội',
     lat: 21.0285,
     lng: 105.8542,
-    nearestStoreAddress: '456 Cầu Giấy, Q. Cầu Giấy',
+    nearestStoreAddress: 'Số 180 Nguyễn Trãi, Q. Thanh Xuân',
   },
   {
     name: 'Đà Nẵng',

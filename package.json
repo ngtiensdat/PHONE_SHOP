@@ -1,11 +1,19 @@
 {
   "name": "phone-shop-root",
   "version": "1.0.0",
-  "description": "Root workspace for PHONE_SHOP project",
+  "description": "Root workspace for PHONE_SHOP project — Sóc Mobile e-commerce platform",
   "scripts": {
     "install:all": "npm install --prefix my-web/backend && npm install --prefix my-web/frontend",
     "dev:frontend": "npm run dev --prefix my-web/frontend",
     "dev:backend": "npm run start:dev --prefix my-web/backend",
-    "dev": "npx --yes concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
+    "dev": "npx --yes concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:frontend": "npm run build --prefix my-web/frontend",
+    "build:backend": "npm run build --prefix my-web/backend",
+    "build:all": "npm run build:backend && npm run build:frontend",
+    "lint:frontend": "npm run lint --prefix my-web/frontend",
+    "lint:backend": "npm run lint --prefix my-web/backend",
+    "lint:all": "npm run lint:backend && npm run lint:frontend",
+    "test:backend": "npm run test --prefix my-web/backend",
+    "ci": "npm run lint:all && npm run build:all && npm run test:backend"
   }
 }

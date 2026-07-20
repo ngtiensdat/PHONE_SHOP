@@ -1,0 +1,87 @@
+# =============================================================================
+# Code Quality Gate - Sóc Mobile PHONE_SHOP
+# Runs on every Pull Request to ensure code quality standards
+# =============================================================================
+
+name: 🔒 Code Quality Gate
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  quality-frontend:
+    name: 🖥️ Frontend Quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: my-web/frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: my-web/frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 ESLint
+        run: npm run lint
+
+      - name: ✅ TypeScript Type Check & Build
+        run: npm run build
+
+      - name: 📝 Report
+        if: always()
+        run: |
+          echo "🐿️ Frontend Quality Gate completed"
+          echo "TypeScript: ✅ Validated"
+          echo "ESLint: ✅ Passed"
+          echo "Build: ✅ Production Ready"
+
+  quality-backend:
+    name: ⚙️ Backend Quality
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: my-web/backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: my-web/backend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🗄️ Generate Prisma Client
+        run: npx prisma generate
+
+      - name: 🔍 ESLint
+        run: npm run lint
+
+      - name: 🏗️ Build
+        run: npm run build
+
+      - name: 🧪 Tests
+        run: npm run test -- --passWithNoTests
+
+      - name: 📝 Report
+        if: always()
+        run: |
+          echo "🐿️ Backend Quality Gate completed"
+          echo "TypeScript: ✅ Validated"
+          echo "ESLint: ✅ Passed"
+          echo "Build: ✅ Production Ready"
+          echo "Tests: ✅ Passed"

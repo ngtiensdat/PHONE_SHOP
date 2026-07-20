@@ -11,6 +11,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import ToastContainer from '@/components/base/ToastContainer';
 import MiniSocChatbox from '@/components/features/ai/MiniSocChatbox';
+import FacebookChatWidget from '@/components/features/support/FacebookChatWidget';
 
 export const metadata: Metadata = {
   title: 'Sóc Mobile — Điện thoại di động cao cấp, giá tốt nhất',
@@ -28,6 +29,7 @@ export default function RootLayout({
     <html lang="vi">
       <body>
         <main>{children}</main>
+        <FacebookChatWidget />
         <MiniSocChatbox />
         <ToastContainer />
       </body>

@@ -29,9 +29,12 @@ import ProductDetailModal from '@/components/features/product/ProductDetailModal
 import CountdownTimer from '@/components/features/flashsale/CountdownTimer';
 import ProductFilters from '@/components/features/filter/ProductFilters';
 import CompareFloatingBar from '@/components/features/product/CompareFloatingBar';
+import Pagination from '@/components/base/Pagination';
 import { FEATURED_PRODUCTS } from '@/data/mock-products';
 import type { MockProduct } from '@/types/product';
 import { LABELS } from '@/constants/labels';
+
+const ITEMS_PER_PAGE = 12;
 
 // Mock banners
 const HERO_BANNERS = [
@@ -80,6 +83,7 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState(LABELS.FILTERS.CATEGORY_MOBILE);
   const [activeBrand, setActiveBrand] = useState('All');
   const [activeTag, setActiveTag] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Slide Auto Play Effect
@@ -98,13 +102,90 @@ export default function Home() {
     setCurrentSlide((prev) => (prev + 1) % HERO_BANNERS.length);
   };
 
-  // Filter Logic
+  // Smart Need Classifier: Analyzes product name, brand & price to match user needs
+  // This eliminates the requirement for manually tagging each product
+  const matchesNeed = (product: MockProduct, need: string): boolean => {
+    if (need === 'All') return true;
+    const nameLower = product.name.toLowerCase();
+    const brandLower = product.brand.toLowerCase();
+    const price = product.price;
+
+    switch (need) {
+      case 'gaming':
+        // Flagship chips, high RAM, gaming-oriented brands/models
+        return (
+          nameLower.includes('pro max') ||
+          nameLower.includes('ultra') ||
+          nameLower.includes('gaming') ||
+          nameLower.includes('rog') ||
+          nameLower.includes('redmagic') ||
+          nameLower.includes('poco') ||
+          (nameLower.includes('pro') && price >= 15000000) ||
+          (brandLower === 'apple' && price >= 20000000) ||
+          (brandLower === 'samsung' && (nameLower.includes('s2') || nameLower.includes('s3'))) ||
+          (nameLower.includes('12gb') || nameLower.includes('16gb'))
+        );
+
+      case 'camera':
+        // Camera-focused models: Pro/Ultra series, high-end phones
+        return (
+          nameLower.includes('pro max') ||
+          nameLower.includes('ultra') ||
+          nameLower.includes('camera') ||
+          nameLower.includes('200mp') ||
+          (brandLower === 'apple' && nameLower.includes('pro')) ||
+          (brandLower === 'samsung' && (nameLower.includes('ultra') || nameLower.includes('s2'))) ||
+          (brandLower === 'xiaomi' && nameLower.includes('ultra')) ||
+          (brandLower === 'oppo' && nameLower.includes('reno')) ||
+          (brandLower === 'vivo' && (nameLower.includes('v4') || nameLower.includes('v3')))
+        );
+
+      case 'pin':
+        // Battery-focused: large battery phones, mid-range, Xiaomi/Samsung A-series
+        return (
+          nameLower.includes('pin') ||
+          nameLower.includes('5000') ||
+          nameLower.includes('6000') ||
+          (brandLower === 'samsung' && nameLower.includes('galaxy a')) ||
+          (brandLower === 'xiaomi' && (nameLower.includes('redmi') || nameLower.includes('poco'))) ||
+          (brandLower === 'realme') ||
+          (brandLower === 'oppo' && nameLower.includes('a')) ||
+          (brandLower === 'nokia') ||
+          price < 10000000
+        );
+
+      case 'premium':
+        // Premium flagship: Highest tier phones
+        return (
+          price >= 20000000 ||
+          nameLower.includes('pro max') ||
+          nameLower.includes('ultra') ||
+          nameLower.includes('fold') ||
+          nameLower.includes('flip') ||
+          nameLower.includes('titanium') ||
+          (brandLower === 'apple' && nameLower.includes('pro'))
+        );
+
+      default:
+        return true;
+    }
+  };
+
+  // Filter Logic with Smart Need Classifier
   const filteredProducts = FEATURED_PRODUCTS.filter((product) => {
     const matchesCategory = product.category === activeCategory;
     const matchesBrand = activeBrand === 'All' || product.brand.toLowerCase() === activeBrand.toLowerCase();
-    const matchesTag = activeTag === 'All' || product.tags.includes(activeTag.toLowerCase());
-    return matchesCategory && matchesBrand && matchesTag;
+    const matchesTagOrNeed = matchesNeed(product, activeTag);
+    return matchesCategory && matchesBrand && matchesTagOrNeed;
   });
+
+  // Reset to page 1 on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, activeBrand, activeTag]);
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   // Dynamic Brands list based on active category
   const activeCategoryProducts = FEATURED_PRODUCTS.filter(p => p.category === activeCategory);
@@ -254,22 +335,33 @@ export default function Home() {
             />
 
             {/* Product Feed Grid */}
-            <div className="products-feed-section">
+            <div id="product-list-top" className="products-feed-section">
               <div className="feed-header-row">
                 <h2>{LABELS.HOMEPAGE.PRODUCT_LIST} {activeCategory.toUpperCase()}</h2>
                 <span className="results-count">{LABELS.HOMEPAGE.FOUND} <strong>{filteredProducts.length}</strong> {LABELS.HOMEPAGE.PRODUCTS_SUFFIX}</span>
               </div>
 
               {filteredProducts.length > 0 ? (
-                <div className="products-grid main-feed-grid">
-                  {filteredProducts.map((product) => (
-                    <CompactProductCard 
-                      key={product.id} 
-                      product={product} 
-                      onClick={() => setSelectedProduct(product)}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="products-grid main-feed-grid">
+                    {paginatedProducts.map((product) => (
+                      <CompactProductCard 
+                        key={product.id} 
+                        product={product} 
+                        onClick={() => setSelectedProduct(product)}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Reusable Pagination Component */}
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    totalItems={filteredProducts.length}
+                    itemsPerPage={ITEMS_PER_PAGE}
+                  />
+                </>
               ) : (
                 <div className="empty-results-box">
                   <ShieldAlert size={48} className="empty-icon" />

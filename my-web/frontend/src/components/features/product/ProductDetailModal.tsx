@@ -9,12 +9,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Star, Zap, GitCompare, Heart, Gift, ShoppingCart } from 'lucide-react';
+import { X, Star, Zap, GitCompare, Heart, Gift, ShoppingCart, HelpCircle, Store } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import SafeImage from '@/components/base/SafeImage';
 import { formatVND } from '@/utils/format';
 import { MockProduct, ProductVariant } from '@/types/product';
 import { useCart } from '@/hooks/useCart';
 import { LABELS } from '@/constants/labels';
+import { APP_CONFIG } from '@/constants/config';
 
 interface ProductDetailModalProps {
   product: MockProduct;
@@ -22,6 +24,7 @@ interface ProductDetailModalProps {
 }
 
 export default function ProductDetailModal({ product, onClose }: ProductDetailModalProps) {
+  const router = useRouter();
   const { addToCart } = useCart();
   
   // Default to first variant
@@ -45,11 +48,11 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  const discountPercent = Math.round(
-    ((selectedVariant.oldPrice - selectedVariant.price) / selectedVariant.oldPrice) * 100
-  );
+  const discountPercent = selectedVariant.oldPrice && selectedVariant.oldPrice > selectedVariant.price
+    ? Math.round(((selectedVariant.oldPrice - selectedVariant.price) / selectedVariant.oldPrice) * 100)
+    : 0;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (redirectCheckout = false, isStorePickup = false) => {
     const variantIndex = product.variants.findIndex(
       (v) => v.storage === selectedVariant.storage
     );
@@ -67,7 +70,17 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
     });
     
     onClose();
+
+    if (redirectCheckout) {
+      if (isStorePickup) {
+        router.push('/checkout?fulfillment=STORE_PICKUP');
+      } else {
+        router.push('/checkout');
+      }
+    }
   };
+
+  const hasSpecs = Boolean(product.specs?.screen || product.specs?.chip || product.specs?.ram);
 
   return (
     <div className="product-detail-modal-overlay" onClick={onClose}>
@@ -133,10 +146,10 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
               <span className="modal-current-price">
                 {formatVND(selectedVariant.price)}
               </span>
-              {selectedVariant.oldPrice > selectedVariant.price && (
+              {Boolean(selectedVariant.oldPrice && selectedVariant.oldPrice > selectedVariant.price) && (
                 <>
                   <span className="modal-old-price">
-                    {formatVND(selectedVariant.oldPrice)}
+                    {formatVND(selectedVariant.oldPrice!)}
                   </span>
                   <span className="modal-discount">
                     -{discountPercent}%
@@ -169,18 +182,32 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
             <div className="modal-specs-section">
               <h4 className="section-subtitle">{LABELS.PRODUCT.SPEC_TITLE}</h4>
               <div className="modal-specs-table">
-                <div className="specs-row">
-                  <span className="specs-label">{LABELS.PRODUCT.SPEC_SCREEN}</span>
-                  <span className="specs-val">{product.specs.screen}</span>
-                </div>
-                <div className="specs-row">
-                  <span className="specs-label">{LABELS.PRODUCT.SPEC_CHIP}</span>
-                  <span className="specs-val">{product.specs.chip}</span>
-                </div>
-                <div className="specs-row">
-                  <span className="specs-label">{LABELS.PRODUCT.SPEC_RAM}</span>
-                  <span className="specs-val">{product.specs.ram}</span>
-                </div>
+                {product.specs?.screen ? (
+                  <div className="specs-row">
+                    <span className="specs-label">{LABELS.PRODUCT.SPEC_SCREEN}</span>
+                    <span className="specs-val">{product.specs.screen}</span>
+                  </div>
+                ) : null}
+                {product.specs?.chip ? (
+                  <div className="specs-row">
+                    <span className="specs-label">{LABELS.PRODUCT.SPEC_CHIP}</span>
+                    <span className="specs-val">{product.specs.chip}</span>
+                  </div>
+                ) : null}
+                {product.specs?.ram ? (
+                  <div className="specs-row">
+                    <span className="specs-label">{LABELS.PRODUCT.SPEC_RAM}</span>
+                    <span className="specs-val">{product.specs.ram}</span>
+                  </div>
+                ) : null}
+                {!hasSpecs && (
+                  <div className="specs-row" style={{ alignItems: 'center', gap: '6px', color: 'var(--text-muted)' }}>
+                    <HelpCircle size={16} style={{ color: '#6d28d9', flexShrink: 0 }} />
+                    <span className="specs-val" style={{ fontStyle: 'italic', fontSize: '12px', lineHeight: 1.4 }}>
+                      Thông số kỹ thuật chi tiết đang được cập nhật từ nhà sản xuất. Vui lòng gọi <strong>{APP_CONFIG.HOTLINE}</strong> để được tư vấn trực tiếp.
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -196,20 +223,33 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
             )}
 
             {/* Interactive Actions Footer */}
-            <div className="modal-actions-footer">
+            <div className="modal-actions-footer" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button
                 type="button"
-                className="btn btn-secondary flex-1 flex-center gap-6"
-                onClick={() => handleAddToCart()}
+                className="btn btn-secondary"
+                style={{ flex: 1, padding: '10px' }}
+                onClick={() => handleAddToCart(false)}
               >
-                <ShoppingCart size={16} />
-                <span>{LABELS.COMMON.ADD_TO_CART}</span>
+                <ShoppingCart size={15} />
+                <span>Thêm giỏ</span>
               </button>
 
               <button
                 type="button"
-                className="btn btn-primary flex-1"
-                onClick={() => handleAddToCart()}
+                className="btn btn-secondary"
+                style={{ flex: 1.2, padding: '10px', borderColor: '#6d28d9', color: '#6d28d9', background: 'rgba(109, 40, 217, 0.08)' }}
+                onClick={() => handleAddToCart(true, true)}
+                title="Cọc 5% giữ máy và đến Showroom trải nghiệm trực tiếp"
+              >
+                <Store size={15} />
+                <span>Giữ máy / Cọc 5%</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ flex: 1, padding: '10px' }}
+                onClick={() => handleAddToCart(true, false)}
               >
                 {LABELS.COMMON.BUY_NOW}
               </button>
